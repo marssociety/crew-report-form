@@ -7,6 +7,7 @@ import addFormats from 'ajv-formats';
 import schema from './schema.json';
 import Database from './database/database';
 import CrewReportRepository from './database/crewReportRepository';
+import greenhabRouter from './routes/greenhab';
 
 const app = express();
 const port = process.env.PORT || 3001;
@@ -27,6 +28,9 @@ app.use(helmet());
 app.use(cors());
 app.use(morgan('combined'));
 app.use(express.json({ limit: '10mb' }));
+
+// Mount routes
+app.use('/api/reports/greenhab', greenhabRouter);
 
 app.get('/api/schema', (req, res) => {
   res.json(schema);

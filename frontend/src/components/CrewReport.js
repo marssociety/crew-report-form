@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { v4 as uuidv4 } from 'uuid';
-import './CrewReportForm.css';
+import './CrewReport.css';
 
 const CrewReportForm = () => {
   const [submitStatus, setSubmitStatus] = useState(null);
-  const { register, handleSubmit, control, setValue, formState: { errors } } = useForm({
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { register, handleSubmit, control, formState: { errors } } = useForm({
     defaultValues: {
       report_id: uuidv4(),
       publish_date: new Date().toISOString(),
@@ -40,9 +41,11 @@ const CrewReportForm = () => {
 
   const onSubmit = async (data) => {
     try {
+      setIsSubmitting(true);
       setSubmitStatus('submitting');
-      
-      const response = await fetch('http://localhost:3001/api/reports', {
+
+      const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:3001';
+      const response = await fetch(`${apiUrl}/api/reports`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -62,6 +65,8 @@ const CrewReportForm = () => {
     } catch (error) {
       setSubmitStatus('error');
       console.error('Submit error:', error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -487,8 +492,8 @@ const CrewReportForm = () => {
         </section>
 
         <div className="form-actions">
-          <button type="submit" disabled={submitStatus === 'submitting'} className="submit-btn">
-            {submitStatus === 'submitting' ? 'Submitting...' : 'Submit Report'}
+          <button type="submit" disabled={isSubmitting} className="submit-btn">
+            {isSubmitting ? 'Submitting...' : 'Submit Report'}
           </button>
         </div>
       </form>
