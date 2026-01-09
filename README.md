@@ -2,6 +2,22 @@
 
 A comprehensive web application for managing Mars Society crew reports and GreenHab operations from analog research stations. This application provides structured form interfaces with full JSON schema validation and database persistence.
 
+---
+
+## 🚀 Production Deployment
+
+See **[DEPLOYMENT.md](DEPLOYMENT.md)** for complete deployment instructions.
+
+**Quick Summary:**
+- **Backend**: Ubuntu VM with Node.js, PM2, and Nginx
+- **Frontend**: Build locally and upload to any static web host
+- **CI/CD**: GitHub Actions for automated backend deployment
+
+**Estimated Setup Time**: 30-45 minutes
+**Monthly Cost**: $5-20/month (VM)
+
+---
+
 ## Features
 
 - **Dual Form Interface**: Crew report and GreenHab operations report forms
@@ -199,16 +215,46 @@ Database file location: `/backend/data/crew_reports.db` (automatically created o
 - Copy-to-clipboard functionality for email content
 - Date formatting (dd-MM-yyyy)
 
-## Production Deployment
+## Deployment
 
-### Backend
+See **[DEPLOYMENT.md](DEPLOYMENT.md)** for complete step-by-step instructions.
+
+### Architecture
+- **Backend**: Ubuntu VM with Node.js 18+, PM2, Nginx, and SSL
+- **Frontend**: Build locally and upload to any static web host (Apache, Nginx, CDN)
+- **Database**: SQLite on backend VM
+- **CI/CD**: GitHub Actions for automated backend deployment
+
+### Quick Start
+
+1. **Backend Setup** (~20 min):
+   - Provision Ubuntu VM
+   - Install Node.js, PM2, Nginx
+   - Deploy backend, configure SSL
+
+2. **Frontend Setup** (~10 min):
+   - Build frontend locally: `npm run build`
+   - Upload `frontend/build/` to your web host
+   - Configure React Router support (.htaccess or nginx config)
+
+3. **CI/CD Setup** (~10 min):
+   - Add GitHub secrets (SSH key, VM host)
+   - Enable GitHub Actions workflow
+   - Push to main branch = auto-deploy backend
+
+**Files:**
+- `.github/workflows/deploy-backend.yml` - Backend deployment automation
+
+### Manual Build
+
+**Backend:**
 ```bash
 cd backend
 npm run build
 npm start
 ```
 
-### Frontend
+**Frontend:**
 ```bash
 cd frontend
 npm run build
@@ -224,9 +270,11 @@ npm run build
 **Frontend:**
 - `REACT_APP_API_URL` - API endpoint URL
   - Development: `http://localhost:3001` (set in `.env`)
-  - Production: `https://api.marssociety.org` (set in `.env.production`)
+  - Production: `https://your-domain.com` (set in `.env.production`)
 
-Create `.env` and `.env.production` files in the frontend directory to configure API endpoints for different environments.
+Example environment files are provided:
+- `.env.example` - Backend configuration template
+- `frontend/.env.production.example` - Frontend production configuration template
 
 ## Development Scripts
 
@@ -286,9 +334,14 @@ See [IMPROVEMENTS.md](IMPROVEMENTS.md) for a comprehensive analysis and detailed
 
 ```
 crew-report-form/
-├── Claude.md                    # AI development context guide
 ├── README.md                    # This file - main documentation
+├── DEPLOYMENT.md                # Complete deployment guide
 ├── IMPROVEMENTS.md              # Detailed analysis and improvements log
+├── .github/
+│   └── workflows/
+│       └── deploy-backend.yml   # GitHub Actions automated deployment
+├── .env.example                 # Backend environment variables template
+├── .gitignore                   # Git ignore patterns
 ├── backend/
 │   ├── src/
 │   │   ├── index.ts              # Express server with routes

@@ -1,0 +1,85 @@
+name: Deploy Backend to Ubuntu VM
+
+on:
+  push:
+    branches: [ main, master ]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/deploy-backend.yml'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    name: Deploy to Ubuntu VM
+
+    steps:
+    - name: Deploy via SSH
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.VM_HOST }}
+        username: ${{ secrets.VM_USERNAME }}
+        key: ${{ secrets.VM_SSH_KEY }}
+        port: ${{ secrets.VM_PORT || 22 }}
+        script: |
+          echo "🚀 Starting deployment..."
+
+          # Run deployment as crewreport user
+          sudo su - crewreport << 'DEPLOY_EOF'
+
+          # Navigate to application directory
+          cd ~/app || exit 1
+
+          # Pull latest changes
+          echo "📥 Pulling latest code..."
+          git pull origin main || git pull origin master
+
+          # Navigate to backend
+          cd backend
+
+          # Install dependencies (including dev deps for build)
+          echo "📦 Installing dependencies..."
+          npm ci
+
+          # Build application
+          echo "🔨 Building backend..."
+          npm run build
+
+          # Clean up dev dependencies
+          echo "🧹 Removing dev dependencies..."
+          npm prune --production
+
+          # Restart PM2 process
+          echo "🔄 Restarting backend..."
+          pm2 restart crew-report-backend || pm2 start dist/index.js --name crew-report-backend
+          pm2 save
+
+          # Show status
+          pm2 status crew-report-backend
+
+          echo "✅ Deployment complete!"
+          DEPLOY_EOF
+
+    - name: Wait for service to stabilize
+      run: sleep 5
+
+    - name: Health Check
+      run: |
+        echo "🏥 Checking backend health..."
+        response=$(curl -s -o /dev/null -w "%{http_code}" https://${{ secrets.VM_HOST }}/health || echo "000")
+
+        if [ "$response" = "200" ]; then
+          echo "✅ Health check passed (HTTP $response)"
+        else
+          echo "❌ Health check failed (HTTP $response)"
+          exit 1
+        fi
+
+    - name: Deployment Summary
+      if: always()
+      run: |
+        echo "📊 Deployment Summary"
+        echo "Host: ${{ secrets.VM_HOST }}"
+        echo "Status: ${{ job.status }}"
+        echo "Triggered by: ${{ github.actor }}"
+        echo "Commit: ${{ github.sha }}"

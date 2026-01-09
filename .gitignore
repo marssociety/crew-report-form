@@ -16,6 +16,9 @@ backend/node_modules/
 .env.development.local
 .env.test.local
 .env.production.local
+.env.production
+backend/.env
+frontend/.env.production
 
 # Logs
 npm-debug.log*
@@ -59,3 +62,22 @@ claude_session_*.json
 claude_conversations/
 .claude_artifacts/
 CLAUDE.md
+
+# Database files
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+backend/data/*.db
+
+# PM2
+.pm2/
+logs/
+
+# Backups
+*.backup
+*.bak
+backups/
+
+# Personal notes
+Notes.md
