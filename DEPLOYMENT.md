@@ -1,731 +1,365 @@
-# Deployment Guide
+# Deployment Guide — Phobos Server
 
-Simple deployment guide for the Mars Society Crew Report application using:
-- **Backend**: Ubuntu VM (Node.js + PM2)
-- **Frontend**: Static web hosting (any provider)
-- **CI/CD**: GitHub Actions
-
----
+Deploy the Mars Society Crew Report application to `crew-reports.marssociety.org` on the **phobos** server for testing and evaluation.
 
 ## Architecture
 
 ```
-┌─────────────────────┐           ┌─────────────────────┐
-│  Static Host        │           │  Ubuntu VM          │
-│  (Frontend)         │  ◄─────►  │  (Backend API)      │
-│                     │   HTTPS   │                     │
-│  - React build      │           │  - Node.js 24       │
-│  - Any CDN/host     │           │  - PM2 manager      │
-└─────────────────────┘           │  - SQLite database  │
-                                  └─────────────────────┘
+                    crew-reports.marssociety.org
+                              │
+                              ▼
+                    ┌─────────────────────┐
+                    │  Nginx (port 80/443)│
+                    │                     │
+                    │  /api/*  ──► proxy  │──► Node.js :3001
+                    │  /health ──► proxy  │──► Node.js :3001
+                    │  /*      ──► static │──► /var/www/crew-report/frontend/build/
+                    └─────────────────────┘
+                              │
+                    ┌─────────────────────┐
+                    │  Backend (PM2)      │
+                    │  - Express API      │
+                    │  - SQLite database  │
+                    └─────────────────────┘
 ```
+
+Single-server setup: Nginx serves the React frontend as static files and reverse-proxies API requests to the Node.js backend.
 
 ---
 
 ## Prerequisites
 
-- Ubuntu 20.04+ or 22.04+ VM with public IP
-- Domain name (optional but recommended)
-- SSH access to VM
-- GitHub repository
-- Static hosting provider (Netlify, Vercel, Cloudflare Pages, or any web host)
+- SSH access to phobos
+- DNS A record: `crew-reports.marssociety.org` → phobos IP
+- Node.js 24 installed on phobos
+- PM2 process manager (`sudo npm install -g pm2`)
 
 ---
 
-## Part 1: Backend Setup (Ubuntu VM)
-
-### Step 1: Initial Server Setup
-
-SSH into your Ubuntu VM:
+## Step 1: Clone the Repository
 
 ```bash
-ssh user@your-vm-ip
-```
+ssh user@phobos
 
-Update system:
-
-```bash
-sudo apt update && sudo apt upgrade -y
-```
-
-### Step 2: Install Node.js 24
-
-```bash
-# Install Node.js 24 LTS
-curl -fsSL https://deb.nodesource.com/setup_24.x | sudo -E bash -
-sudo apt-get install -y nodejs
-
-# Verify installation
-node --version  # Should show v24.x.x
-npm --version
-
-# If npm command not found, reload your shell or run:
-hash -r
-# Or logout and login again
-```
-
-### Step 3: Install PM2 Process Manager
-
-```bash
-sudo npm install -g pm2
-```
-
-### Step 4: Setup Application User and Directory
-
-**Recommended for Production**: Create a dedicated user for the application:
-
-```bash
-# Create dedicated application user
-sudo useradd -m -s /bin/bash crewreport
-
-# Create application directory
-sudo mkdir -p /home/crewreport/app
-sudo chown crewreport:crewreport /home/crewreport/app
-
-# Switch to the crewreport user
-sudo su - crewreport
-
-# Clone repository (as crewreport user)
-cd ~/app
-git clone https://github.com/YOUR-USERNAME/crew-report-form.git .
-
-# Exit back to your admin user
-exit
-```
-
-**Alternative (Development/Testing)**: Use /var/www directory with your current user:
-
-```bash
-# Only if NOT using dedicated user above
 sudo mkdir -p /var/www/crew-report
 sudo chown $USER:$USER /var/www/crew-report
 cd /var/www/crew-report
 git clone https://github.com/YOUR-USERNAME/crew-report-form.git .
 ```
 
-### Step 5: Configure Backend
+---
+
+## Step 2: Build and Start the Backend
 
 ```bash
-# Switch to crewreport user
-sudo su - crewreport
+cd /var/www/crew-report/backend
 
-# Navigate to backend directory
-cd ~/app/backend
-
-# Install ALL dependencies (including dev dependencies needed for build)
+# Install dependencies
 npm ci
 
-# Create production environment file
+# Create environment file
 cat > .env << EOF
 NODE_ENV=production
 PORT=3001
 EOF
 
-# Build backend
+# Build TypeScript
 npm run build
 
-# Optional: Remove dev dependencies after build to save space
-# npm prune --production
-
-# Exit back to admin user
-exit
-```
-
-**Note**: If using the alternative /var/www approach, replace `~/app` with `/var/www/crew-report` in all commands.
-
-### Step 6: Start Backend with PM2
-
-```bash
-# Switch to crewreport user
-sudo su - crewreport
-
-# Navigate to backend directory
-cd ~/app/backend
-
-# Start backend with PM2
+# Start with PM2
 pm2 start dist/index.js --name crew-report-backend
-
-# Save PM2 process list
 pm2 save
 
-# Exit back to admin user
-exit
-
-# Configure PM2 to start on boot (run as your admin user, NOT as crewreport)
-sudo env PATH=$PATH:/usr/bin pm2 startup systemd -u crewreport --hp /home/crewreport
-
-# Check status (as admin user)
-sudo su - crewreport -c "pm2 status"
-
-# View logs
-sudo su - crewreport -c "pm2 logs crew-report-backend --lines 20"
+# Verify it's running
+curl http://localhost:3001/health
+# Expected: {"status":"healthy","timestamp":"..."}
 ```
 
-### Step 7: Configure Firewall
+Set PM2 to start on boot:
 
 ```bash
-# Allow SSH, HTTP, and HTTPS
-sudo ufw allow 22/tcp
-sudo ufw allow 80/tcp
-sudo ufw allow 443/tcp
-
-# Enable firewall
-sudo ufw --force enable
-sudo ufw status
+pm2 startup
+# Run the command it outputs (will look like: sudo env PATH=... pm2 startup ...)
+pm2 save
 ```
 
-### Step 8: Install and Configure Nginx
+---
+
+## Step 3: Build the Frontend
 
 ```bash
-# Install Nginx
+cd /var/www/crew-report/frontend
+
+# Set the production API URL (same domain, Nginx will proxy)
+cat > .env.production << EOF
+REACT_APP_API_URL=https://crew-reports.marssociety.org
+EOF
+
+# Install dependencies and build
+npm ci
+npm run build
+```
+
+The built files will be in `frontend/build/`.
+
+---
+
+## Step 4: Configure Nginx
+
+```bash
 sudo apt install -y nginx
+```
 
-# Create Nginx configuration
+Create the site config:
+
+```bash
 sudo tee /etc/nginx/sites-available/crew-report << 'EOF'
 server {
     listen 80;
-    server_name your-domain.com;  # Change this to your domain or IP
+    server_name crew-reports.marssociety.org;
 
     # Security headers
     add_header X-Content-Type-Options "nosniff" always;
     add_header X-Frame-Options "SAMEORIGIN" always;
     add_header X-XSS-Protection "1; mode=block" always;
 
-    # API proxy
-    location / {
-        proxy_pass http://localhost:3001;
+    # Proxy API requests to Node.js backend
+    location /api/ {
+        proxy_pass http://127.0.0.1:3001;
         proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_cache_bypass $http_upgrade;
+        proxy_read_timeout 30s;
     }
 
-    # Health check endpoint
+    # Proxy health check
     location /health {
-        proxy_pass http://localhost:3001/health;
+        proxy_pass http://127.0.0.1:3001;
+        proxy_set_header Host $host;
         access_log off;
+    }
+
+    # Serve React frontend (static files)
+    location / {
+        root /var/www/crew-report/frontend/build;
+        index index.html;
+        try_files $uri $uri/ /index.html;
+    }
+
+    # Cache static assets
+    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
+        root /var/www/crew-report/frontend/build;
+        expires 7d;
+        add_header Cache-Control "public, immutable";
     }
 }
 EOF
 
-# Enable site
-sudo ln -s /etc/nginx/sites-available/crew-report /etc/nginx/sites-enabled/
+# Enable the site
+sudo ln -sf /etc/nginx/sites-available/crew-report /etc/nginx/sites-enabled/
 sudo rm -f /etc/nginx/sites-enabled/default
 
-# Test configuration
+# Test and restart
 sudo nginx -t
-
-# Restart Nginx
 sudo systemctl restart nginx
 sudo systemctl enable nginx
 ```
 
-### Step 9: Install SSL Certificate (Optional but Recommended)
+---
+
+## Step 5: Configure Firewall
 
 ```bash
-# Install Certbot
+sudo ufw allow 22/tcp
+sudo ufw allow 80/tcp
+sudo ufw allow 443/tcp
+sudo ufw --force enable
+```
+
+---
+
+## Step 6: Install SSL Certificate
+
+```bash
 sudo apt install -y certbot python3-certbot-nginx
 
-# Get SSL certificate (replace with your domain)
-sudo certbot --nginx -d your-domain.com
+# Get certificate (will auto-update the Nginx config)
+sudo certbot --nginx -d crew-reports.marssociety.org
 
-# Auto-renewal is configured automatically
-# Test renewal:
+# Verify auto-renewal
 sudo certbot renew --dry-run
 ```
 
-### Step 10: Test Backend
+---
+
+## Step 7: Verify Deployment
 
 ```bash
-# Test locally
-curl http://localhost:3001/health
+# Backend health check
+curl https://crew-reports.marssociety.org/health
 
-# Test via Nginx
-curl http://your-domain.com/health
+# API endpoint
+curl https://crew-reports.marssociety.org/api/reports
 
-# Should return: {"status":"ok","timestamp":"..."}
+# Frontend (should return HTML)
+curl -s https://crew-reports.marssociety.org | head -5
 ```
+
+Open `https://crew-reports.marssociety.org` in a browser — you should see the login screen.
 
 ---
 
-## Part 2: Frontend Setup (Manual Deployment)
-
-Build the frontend locally and upload to any static web host (Apache, Nginx, or any CDN):
+## Updating the Application
 
 ```bash
-# Configure API URL
-echo "REACT_APP_API_URL=https://your-domain.com" > frontend/.env.production
+ssh user@phobos
+cd /var/www/crew-report
 
-# Build
-cd frontend
+# Pull latest code
+git pull origin master
+
+# Rebuild backend
+cd backend
 npm ci
 npm run build
+pm2 restart crew-report-backend
 
-# Upload frontend/build/ directory to your web host
+# Rebuild frontend
+cd ../frontend
+npm ci
+npm run build
 ```
 
-Create `.htaccess` (for Apache) or equivalent for your host:
-
-```apache
-<IfModule mod_rewrite.c>
-  RewriteEngine On
-  RewriteBase /
-  RewriteRule ^index\.html$ - [L]
-  RewriteCond %{REQUEST_FILENAME} !-f
-  RewriteCond %{REQUEST_FILENAME} !-d
-  RewriteRule . /index.html [L]
-</IfModule>
-```
-
----
-
-## Part 3: GitHub Actions CI/CD
-
-### Backend Auto-Deploy Workflow
-
-Create `.github/workflows/deploy-backend.yml`:
-
-```yaml
-name: Deploy Backend to Ubuntu VM
-
-on:
-  push:
-    branches: [ main ]
-    paths:
-      - 'backend/**'
-  workflow_dispatch:
-
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-
-    steps:
-    - name: Deploy to VM via SSH
-      uses: appleboy/ssh-action@v1.0.0
-      with:
-        host: ${{ secrets.VM_HOST }}
-        username: ${{ secrets.VM_USERNAME }}
-        key: ${{ secrets.VM_SSH_KEY }}
-        script: |
-          sudo su - crewreport << 'DEPLOY_EOF'
-          cd ~/app
-          git pull origin main
-          cd backend
-          npm ci
-          npm run build
-          npm prune --production
-          pm2 restart crew-report-backend
-          pm2 save
-          DEPLOY_EOF
-
-    - name: Health Check
-      run: |
-        sleep 5
-        curl -f https://${{ secrets.VM_HOST }}/health || exit 1
-```
-
-### Frontend Auto-Deploy (Optional)
-
-If you want to automate frontend deployment, create `.github/workflows/deploy-frontend.yml`:
-
-```yaml
-name: Build and Deploy Frontend
-
-on:
-  push:
-    branches: [ main ]
-    paths:
-      - 'frontend/**'
-  workflow_dispatch:
-
-jobs:
-  build-deploy:
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v4
-
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '24'
-        cache: 'npm'
-        cache-dependency-path: frontend/package-lock.json
-
-    - name: Install and Build
-      working-directory: frontend
-      env:
-        REACT_APP_API_URL: ${{ secrets.BACKEND_URL }}
-      run: |
-        npm ci
-        npm run build
-
-    - name: Deploy to hosting
-      uses: SamKirkland/FTP-Deploy-Action@v4.3.4
-      with:
-        server: ${{ secrets.FTP_SERVER }}
-        username: ${{ secrets.FTP_USERNAME }}
-        password: ${{ secrets.FTP_PASSWORD }}
-        local-dir: ./frontend/build/
-        server-dir: ./public_html/
-```
-
-### Required GitHub Secrets
-
-Go to: **Repository → Settings → Secrets and variables → Actions**
-
-**For Backend:**
-- `VM_HOST`: Your VM IP or domain
-- `VM_USERNAME`: SSH username (your admin user, NOT crewreport)
-- `VM_SSH_KEY`: Private SSH key (see below)
-
-**For Frontend (optional, only if using automated deployment):**
-- `BACKEND_URL`: Your backend URL (https://your-domain.com)
-- `FTP_SERVER`: Your hosting FTP server
-- `FTP_USERNAME`: FTP username
-- `FTP_PASSWORD`: FTP password
-
-### Generate SSH Key for GitHub Actions
-
-On your local machine:
-
-```bash
-# Generate deployment key
-ssh-keygen -t ed25519 -C "github-actions" -f ~/.ssh/github_deploy
-
-# Copy public key to VM
-ssh-copy-id -i ~/.ssh/github_deploy.pub user@your-vm-ip
-
-# Copy private key to GitHub Secrets
-cat ~/.ssh/github_deploy
-# Add this as VM_SSH_KEY secret in GitHub
-```
-
-### Configure Sudo Access for Deployment User
-
-On your Ubuntu VM, allow your admin user to switch to crewreport without password (needed for CI/CD):
-
-```bash
-# Edit sudoers file
-sudo visudo
-
-# Add this line (replace 'tmsadmin' with your actual admin username):
-tmsadmin ALL=(crewreport) NOPASSWD: ALL
-
-# Or for broader access (less secure):
-# tmsadmin ALL=(ALL) NOPASSWD: ALL
-```
-
-**Important**: Only give NOPASSWD access to your CI/CD user for switching to the crewreport user, not for all sudo commands.
-
----
-
-## Configuration Summary
-
-### Backend Configuration
-
-**File**: `backend/.env`
-```env
-NODE_ENV=production
-PORT=3001
-```
-
-**Update CORS** in `backend/src/index.ts`:
-```typescript
-const allowedOrigins = [
-  'https://your-frontend-domain.netlify.app',
-  'https://your-custom-domain.com',
-  'http://localhost:3000'  // For development
-];
-
-app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true
-}));
-```
-
-### Frontend Configuration
-
-**File**: `frontend/.env.production`
-```env
-REACT_APP_API_URL=https://your-backend-domain.com
-```
+No Nginx restart is needed — it serves the build directory directly.
 
 ---
 
 ## Maintenance Commands
 
-### Backend (on VM)
-
 ```bash
-# View logs
+# View backend logs
 pm2 logs crew-report-backend
 
 # Restart backend
 pm2 restart crew-report-backend
 
-# Check status
+# Check PM2 status
 pm2 status
 
 # Monitor resources
 pm2 monit
 
-# Backup database (as crewreport user)
-sudo su - crewreport -c "cp ~/app/backend/data/crew_reports.db ~/backup_$(date +%Y%m%d).db"
-
-# Or copy to your admin user's home directory
-sudo cp /home/crewreport/app/backend/data/crew_reports.db ~/backup_$(date +%Y%m%d).db
-```
-
-### Update Application
-
-```bash
-# SSH to VM
-ssh user@your-vm-ip
-
-# Switch to crewreport user
-sudo su - crewreport
-
-# Pull latest code
-cd ~/app
-git pull origin main
-
-# Update and restart backend
-cd backend
-npm ci
-npm run build
-npm prune --production
-pm2 restart crew-report-backend
-
-# Exit back to admin user
-exit
-```
-
----
-
-## Monitoring & Logs
-
-### Check Application Health
-
-```bash
-# Backend health check
-curl https://your-domain.com/health
-
-# View backend logs (as crewreport user)
-sudo su - crewreport -c "pm2 logs crew-report-backend --lines 100"
-
 # View Nginx logs
 sudo tail -f /var/log/nginx/access.log
 sudo tail -f /var/log/nginx/error.log
-```
 
-### Setup Log Rotation
-
-PM2 handles log rotation automatically. For Nginx:
-
-```bash
-# Nginx log rotation is configured by default in Ubuntu
-ls /etc/logrotate.d/nginx
+# Backup database
+cp /var/www/crew-report/backend/data/crew_reports.db ~/crew_reports_backup_$(date +%Y%m%d).db
 ```
 
 ---
 
 ## Troubleshooting
 
-### Node.js / npm Installation Issues
-
-**Problem**: `npm: command not found` after installing Node.js
-
-**Solutions**:
+### Backend won't start
 
 ```bash
-# Option 1: Check if Node.js was actually installed
-node --version
-
-# If node command works but npm doesn't, npm might not be in PATH
-# Reload shell hash table
-hash -r
-
-# Or find where npm is installed
-which npm
-ls -la /usr/bin/npm
-
-# Option 2: If Node.js is already installed (you mentioned you have Node 24)
-# Just verify the version and proceed
-node --version  # Should show v24.x.x
-
-# Check if npm is available
-npm --version
-
-# If npm still not found, reinstall nodejs
-sudo apt-get remove nodejs npm -y
-sudo apt-get autoremove -y
-curl -fsSL https://deb.nodesource.com/setup_24.x | sudo -E bash -
-sudo apt-get install -y nodejs
-
-# Verify both are now available
-node --version && npm --version
-
-# Option 3: If you installed Node.js via a different method (nvm, snap, etc.)
-# Make sure it's in your PATH. You may need to logout/login or source your profile:
-source ~/.bashrc
-# or
-source ~/.profile
-```
-
-### Backend Not Starting
-
-```bash
-# Check PM2 status
-pm2 status
-
-# View detailed logs
 pm2 logs crew-report-backend --lines 50
-
-# Check if port is in use
-sudo lsof -i :3001
-
-# Restart
+sudo lsof -i :3001        # Check if port is in use
 pm2 restart crew-report-backend
 ```
 
-### Nginx Issues
+### Frontend shows blank page or 404
 
 ```bash
-# Test configuration
+# Verify the build exists
+ls /var/www/crew-report/frontend/build/index.html
+
+# Check Nginx config
 sudo nginx -t
-
-# Check Nginx status
 sudo systemctl status nginx
-
-# Restart Nginx
-sudo systemctl restart nginx
-
-# View error logs
-sudo tail -f /var/log/nginx/error.log
 ```
 
-### Frontend Can't Reach Backend
+### API calls fail (CORS or connection errors)
 
-1. Check CORS configuration in backend
-2. Verify `REACT_APP_API_URL` in frontend build
-3. Test backend directly: `curl https://your-backend.com/health`
-4. Check browser console for errors
+1. Verify backend is running: `curl http://localhost:3001/health`
+2. Check that `REACT_APP_API_URL` was set before building the frontend
+3. Verify Nginx is proxying correctly: `curl https://crew-reports.marssociety.org/api/reports`
+4. Check Nginx error log: `sudo tail -f /var/log/nginx/error.log`
 
-### Database Issues
+### Database issues
 
 ```bash
-# Check database file exists
-sudo ls -lh /home/crewreport/app/backend/data/crew_reports.db
-
-# Check permissions (should be owned by crewreport)
-sudo ls -la /home/crewreport/app/backend/data/
+# Check database file
+ls -lh /var/www/crew-report/backend/data/crew_reports.db
 
 # Fix permissions if needed
-sudo chown crewreport:crewreport /home/crewreport/app/backend/data/crew_reports.db
-sudo chmod 644 /home/crewreport/app/backend/data/crew_reports.db
+sudo chown $USER:$USER /var/www/crew-report/backend/data/crew_reports.db
 
-# Backup and restore (as crewreport user)
-sudo su - crewreport
-cp ~/app/backend/data/crew_reports.db ~/app/backend/data/crew_reports.db.backup
-exit
+# Backup before making changes
+cp /var/www/crew-report/backend/data/crew_reports.db ~/crew_reports.db.backup
 ```
 
 ---
 
-## Security Best Practices
+## Optional: GitHub Actions CI/CD
 
-1. **Keep system updated**
-   ```bash
-   sudo apt update && sudo apt upgrade -y
-   ```
+Create `.github/workflows/deploy.yml` to auto-deploy on push:
 
-2. **Use SSH keys** (disable password auth)
-   ```bash
-   sudo nano /etc/ssh/sshd_config
-   # Set: PasswordAuthentication no
-   sudo systemctl restart sshd
-   ```
+```yaml
+name: Deploy to Phobos
 
-3. **Configure firewall** (already done in setup)
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
 
-4. **Regular backups**
-   ```bash
-   # Add to crewreport user's crontab
-   sudo su - crewreport
-   mkdir -p ~/backups
-   crontab -e
-   # Add: 0 2 * * * cp ~/app/backend/data/crew_reports.db ~/backups/db_$(date +\%Y\%m\%d).db
-   exit
-   ```
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Deploy via SSH
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.PHOBOS_HOST }}
+        username: ${{ secrets.PHOBOS_USERNAME }}
+        key: ${{ secrets.PHOBOS_SSH_KEY }}
+        script: |
+          cd /var/www/crew-report
+          git pull origin master
+          cd backend && npm ci && npm run build && pm2 restart crew-report-backend
+          cd ../frontend && npm ci && npm run build
 
-5. **Monitor logs** regularly
+    - name: Health check
+      run: |
+        sleep 5
+        curl -f https://crew-reports.marssociety.org/health || exit 1
+```
 
-6. **Use SSL/HTTPS** (already configured with Certbot)
-
----
-
-## Cost Estimate
-
-### Minimal Setup (Development/Testing)
-- VM: $5-10/month (1GB RAM, 1 CPU)
-- Frontend: $0 (Netlify/Vercel free tier)
-- **Total: $5-10/month**
-
-### Production Setup
-- VM: $10-20/month (2GB RAM, 2 CPU)
-- Frontend: $0 (Netlify/Vercel free tier or $20/month for pro)
-- **Total: $10-40/month**
+**Required GitHub Secrets** (Repository → Settings → Secrets → Actions):
+- `PHOBOS_HOST` — phobos IP address or hostname
+- `PHOBOS_USERNAME` — SSH username
+- `PHOBOS_SSH_KEY` — private SSH key for deployment
 
 ---
 
 ## Quick Start Checklist
 
-### Backend Setup
-- [ ] Provision Ubuntu VM
-- [ ] Install Node.js 24
-- [ ] Install PM2
-- [ ] Clone repository
-- [ ] Build and start backend
-- [ ] Configure Nginx
-- [ ] Setup SSL with Certbot
-- [ ] Test backend API
-
-### Frontend Setup
-- [ ] Choose static hosting provider
-- [ ] Configure environment variable (API URL)
-- [ ] Connect GitHub repository
-- [ ] Deploy frontend
-- [ ] Test frontend
-
-### CI/CD Setup
-- [ ] Create GitHub Actions workflows
-- [ ] Add required secrets
-- [ ] Test automated deployment
-- [ ] Verify both frontend and backend update correctly
+- [ ] DNS A record for `crew-reports.marssociety.org` points to phobos
+- [ ] Clone repo to `/var/www/crew-report`
+- [ ] Build and start backend with PM2
+- [ ] Build frontend with production API URL
+- [ ] Configure and enable Nginx
+- [ ] Open firewall ports (22, 80, 443)
+- [ ] Install SSL certificate with Certbot
+- [ ] Verify `https://crew-reports.marssociety.org` loads
+- [ ] Verify API works: `/health` and `/api/reports`
 
 ---
 
-## Support
-
-For issues or questions:
-1. Check the [backend/src/index.ts](backend/src/index.ts) for API configuration
-2. Check the [frontend/src/](frontend/src/) components for frontend code
-3. Review PM2 logs: `pm2 logs`
-4. Review Nginx logs: `sudo tail -f /var/log/nginx/error.log`
-
----
-
-**Last Updated**: January 2026
-**Architecture**: Ubuntu VM (Backend) + Static Hosting (Frontend)
-**Status**: Production Ready
+**Last Updated**: March 2026
+**Server**: phobos
+**Domain**: crew-reports.marssociety.org
+**Status**: Testing & Evaluation

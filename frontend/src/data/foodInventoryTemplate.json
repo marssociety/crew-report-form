@@ -1,0 +1,96 @@
+[
+  {
+    "category": "Baking",
+    "items": [
+      { "name": "All-Purpose Flour", "amount": 5, "unit": "lbs", "weight": "5" },
+      { "name": "Sugar", "amount": 4, "unit": "lbs", "weight": "4" },
+      { "name": "Brown Sugar", "amount": 2, "unit": "lbs", "weight": "2" },
+      { "name": "Baking Powder", "amount": 1, "unit": "can", "weight": "0.5" },
+      { "name": "Baking Soda", "amount": 1, "unit": "box", "weight": "1" },
+      { "name": "Vanilla Extract", "amount": 1, "unit": "bottle", "weight": "0.5" },
+      { "name": "Yeast", "amount": 2, "unit": "packets", "weight": "0.2" }
+    ]
+  },
+  {
+    "category": "Freeze Dried",
+    "items": [
+      { "name": "Freeze Dried Fruit", "amount": 6, "unit": "bags", "weight": "3" },
+      { "name": "Freeze Dried Vegetables", "amount": 6, "unit": "bags", "weight": "3" },
+      { "name": "Freeze Dried Meals", "amount": 12, "unit": "pouches", "weight": "6" }
+    ]
+  },
+  {
+    "category": "Cereal",
+    "items": [
+      { "name": "Oatmeal", "amount": 3, "unit": "canisters", "weight": "6" },
+      { "name": "Granola", "amount": 2, "unit": "bags", "weight": "4" },
+      { "name": "Cereal", "amount": 2, "unit": "boxes", "weight": "2" }
+    ]
+  },
+  {
+    "category": "Dairy",
+    "items": [
+      { "name": "Powdered Milk", "amount": 4, "unit": "boxes", "weight": "4" },
+      { "name": "Shelf-Stable Cheese", "amount": 3, "unit": "packages", "weight": "3" },
+      { "name": "Butter (canned)", "amount": 2, "unit": "cans", "weight": "2" }
+    ]
+  },
+  {
+    "category": "Canned Goods",
+    "items": [
+      { "name": "Canned Tomatoes", "amount": 8, "unit": "cans", "weight": "12" },
+      { "name": "Canned Beans", "amount": 8, "unit": "cans", "weight": "12" },
+      { "name": "Canned Corn", "amount": 4, "unit": "cans", "weight": "6" },
+      { "name": "Canned Soup", "amount": 6, "unit": "cans", "weight": "9" },
+      { "name": "Canned Tuna/Chicken", "amount": 6, "unit": "cans", "weight": "6" }
+    ]
+  },
+  {
+    "category": "Grains & Pasta",
+    "items": [
+      { "name": "Rice", "amount": 10, "unit": "lbs", "weight": "10" },
+      { "name": "Pasta", "amount": 6, "unit": "boxes", "weight": "6" },
+      { "name": "Couscous", "amount": 2, "unit": "boxes", "weight": "2" },
+      { "name": "Quinoa", "amount": 2, "unit": "bags", "weight": "2" }
+    ]
+  },
+  {
+    "category": "Proteins",
+    "items": [
+      { "name": "Canned Meat", "amount": 6, "unit": "cans", "weight": "6" },
+      { "name": "Jerky", "amount": 4, "unit": "bags", "weight": "2" },
+      { "name": "Protein Bars", "amount": 24, "unit": "bars", "weight": "4" },
+      { "name": "Peanut Butter", "amount": 3, "unit": "jars", "weight": "6" }
+    ]
+  },
+  {
+    "category": "Snacks",
+    "items": [
+      { "name": "Trail Mix", "amount": 4, "unit": "bags", "weight": "4" },
+      { "name": "Crackers", "amount": 4, "unit": "boxes", "weight": "4" },
+      { "name": "Dried Fruit", "amount": 3, "unit": "bags", "weight": "3" },
+      { "name": "Chocolate", "amount": 4, "unit": "bars", "weight": "2" }
+    ]
+  },
+  {
+    "category": "Beverages",
+    "items": [
+      { "name": "Coffee", "amount": 3, "unit": "cans", "weight": "3" },
+      { "name": "Tea", "amount": 4, "unit": "boxes", "weight": "2" },
+      { "name": "Hot Chocolate", "amount": 2, "unit": "canisters", "weight": "3" },
+      { "name": "Powdered Drink Mix", "amount": 6, "unit": "packets", "weight": "3" }
+    ]
+  },
+  {
+    "category": "Condiments & Spices",
+    "items": [
+      { "name": "Salt", "amount": 2, "unit": "containers", "weight": "2" },
+      { "name": "Pepper", "amount": 1, "unit": "container", "weight": "0.5" },
+      { "name": "Olive Oil", "amount": 2, "unit": "bottles", "weight": "4" },
+      { "name": "Soy Sauce", "amount": 1, "unit": "bottle", "weight": "1" },
+      { "name": "Hot Sauce", "amount": 2, "unit": "bottles", "weight": "1" },
+      { "name": "Ketchup", "amount": 1, "unit": "bottle", "weight": "2" },
+      { "name": "Mustard", "amount": 1, "unit": "bottle", "weight": "1" }
+    ]
+  }
+]

@@ -13,6 +13,16 @@ const schema_json_1 = __importDefault(require("./schema.json"));
 const database_1 = __importDefault(require("./database/database"));
 const crewReportRepository_1 = __importDefault(require("./database/crewReportRepository"));
 const greenhab_1 = __importDefault(require("./routes/greenhab"));
+const solSummary_1 = __importDefault(require("./routes/solSummary"));
+const operations_1 = __importDefault(require("./routes/operations"));
+const evaReport_1 = __importDefault(require("./routes/evaReport"));
+const evaRequest_1 = __importDefault(require("./routes/evaRequest"));
+const journalist_1 = __importDefault(require("./routes/journalist"));
+const photos_1 = __importDefault(require("./routes/photos"));
+const astronomy_1 = __importDefault(require("./routes/astronomy"));
+const hsoChecklist_1 = __importDefault(require("./routes/hsoChecklist"));
+const checkout_1 = __importDefault(require("./routes/checkout"));
+const foodInventory_1 = __importDefault(require("./routes/foodInventory"));
 const app = (0, express_1.default)();
 const port = process.env.PORT || 3001;
 const ajv = new ajv_1.default({
@@ -31,6 +41,16 @@ app.use((0, morgan_1.default)('combined'));
 app.use(express_1.default.json({ limit: '10mb' }));
 // Mount routes
 app.use('/api/reports/greenhab', greenhab_1.default);
+app.use('/api/reports/sol-summary', solSummary_1.default);
+app.use('/api/reports/operations', operations_1.default);
+app.use('/api/reports/eva', evaReport_1.default);
+app.use('/api/reports/eva-request', evaRequest_1.default);
+app.use('/api/reports/journalist', journalist_1.default);
+app.use('/api/reports/photos', photos_1.default);
+app.use('/api/reports/astronomy', astronomy_1.default);
+app.use('/api/reports/hso-checklist', hsoChecklist_1.default);
+app.use('/api/reports/checkout', checkout_1.default);
+app.use('/api/reports/food-inventory', foodInventory_1.default);
 app.get('/api/schema', (req, res) => {
     res.json(schema_json_1.default);
 });

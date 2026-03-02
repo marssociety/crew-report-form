@@ -8,6 +8,16 @@ import schema from './schema.json';
 import Database from './database/database';
 import CrewReportRepository from './database/crewReportRepository';
 import greenhabRouter from './routes/greenhab';
+import solSummaryRouter from './routes/solSummary';
+import operationsRouter from './routes/operations';
+import evaReportRouter from './routes/evaReport';
+import evaRequestRouter from './routes/evaRequest';
+import journalistRouter from './routes/journalist';
+import photosRouter from './routes/photos';
+import astronomyRouter from './routes/astronomy';
+import hsoChecklistRouter from './routes/hsoChecklist';
+import checkoutRouter from './routes/checkout';
+import foodInventoryRouter from './routes/foodInventory';
 
 const app = express();
 const port = process.env.PORT || 3001;
@@ -31,6 +41,16 @@ app.use(express.json({ limit: '10mb' }));
 
 // Mount routes
 app.use('/api/reports/greenhab', greenhabRouter);
+app.use('/api/reports/sol-summary', solSummaryRouter);
+app.use('/api/reports/operations', operationsRouter);
+app.use('/api/reports/eva', evaReportRouter);
+app.use('/api/reports/eva-request', evaRequestRouter);
+app.use('/api/reports/journalist', journalistRouter);
+app.use('/api/reports/photos', photosRouter);
+app.use('/api/reports/astronomy', astronomyRouter);
+app.use('/api/reports/hso-checklist', hsoChecklistRouter);
+app.use('/api/reports/checkout', checkoutRouter);
+app.use('/api/reports/food-inventory', foodInventoryRouter);
 
 app.get('/api/schema', (req, res) => {
   res.json(schema);
