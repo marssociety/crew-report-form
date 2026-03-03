@@ -1,0 +1,745 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Crew Report",
+  "description": "Standardized crew report schema for space analog research missions. Supports typed role_specific_data sections via discriminated union on report_type.",
+  "type": "object",
+  "definitions": {
+    "sol_summary_specific": {
+      "type": "object",
+      "description": "Sol Summary report fields — daily commander's overview of mission status and activities.",
+      "properties": {
+        "summary_title": { "type": "string", "description": "Title for the sol's summary" },
+        "mission_status": { "type": "string", "description": "Overall mission status (e.g., Nominal, In Progress)" },
+        "sol_activity_summary": { "type": "string", "description": "Narrative summary of the sol's activities" },
+        "look_ahead_plan": { "type": "string", "description": "Plans for upcoming sols" },
+        "anomalies": { "type": "string", "description": "Any anomalies or unexpected issues" },
+        "weather": { "type": "string", "description": "Weather conditions and observations" },
+        "crew_physical_status": { "type": "string", "description": "Physical health status of crew" },
+        "eva": { "type": "string", "description": "EVA activities and notes" },
+        "reports_to_be_filed": { "type": "string", "description": "List of reports still needing to be filed" },
+        "support_requested": { "type": "string", "description": "Support or assistance needed from mission support" }
+      },
+      "additionalProperties": false
+    },
+    "operations_specific": {
+      "type": "object",
+      "description": "Operations report fields — detailed systems status, rover readings, and facility summaries.",
+      "properties": {
+        "non_nominal_systems": { "type": "string", "description": "List of non-functioning or degraded systems" },
+        "notes_on_non_nominal": { "type": "string", "description": "Details on system issues" },
+        "general_notes_on_rovers": { "type": "string", "description": "General rover operation notes" },
+        "summary_of_hab_operations": { "type": "string", "description": "Habitat operations summary" },
+        "water_use": { "type": "string", "description": "Water consumption notes" },
+        "main_tank_level": { "type": "string", "description": "Primary water tank level" },
+        "main_water_tank_pipe_heater": { "type": "string", "enum": ["ON", "OFF"], "description": "Pipe heater status" },
+        "main_water_tank_heater": { "type": "string", "enum": ["ON", "OFF"], "description": "Tank heater status" },
+        "toilet_tank_emptied": { "type": "string", "enum": ["YES", "NO"], "description": "Whether toilet tank was emptied" },
+        "summary_of_internet": { "type": "string", "description": "Internet connectivity status" },
+        "summary_of_suits_and_radios": { "type": "string", "description": "EVA suits and radio status" },
+        "summary_of_greenhab": { "type": "string", "description": "GreenHab operations summary" },
+        "greenhab_water_use_gallons": { "type": "number", "description": "GreenHab water usage in gallons" },
+        "greenhab_heater": { "type": "string", "enum": ["ON", "OFF"], "description": "GreenHab heater status" },
+        "greenhab_supplemental_light": { "type": "string", "description": "Supplemental light hours or 'Disabled'" },
+        "greenhab_harvest": { "type": "string", "description": "Harvest details" },
+        "summary_of_sciencedome": { "type": "string", "description": "Science Dome status" },
+        "dual_split": { "type": "string", "description": "Heat/AC system state" },
+        "summary_of_ram": { "type": "string", "description": "RAM module status" },
+        "summary_of_observatory": { "type": "string", "description": "Observatory status" },
+        "summary_of_health_safety": { "type": "string", "description": "Health and safety notes" },
+        "questions_to_mission_support": { "type": "string", "description": "Questions for mission control" },
+        "rovers": {
+          "type": "array",
+          "description": "Rover readings (e.g., Spirit, Opportunity, Curiosity, Perseverance)",
+          "items": {
+            "type": "object",
+            "properties": {
+              "rover_name": { "type": "string", "description": "Name of the rover" },
+              "rover_used": { "type": "string", "description": "Whether the rover was used (Yes/No)" },
+              "hours": { "type": "string", "description": "Operational hours reading" },
+              "beginning_charge": { "type": "string", "description": "Battery charge percentage at start" },
+              "ending_charge": { "type": "string", "description": "Battery charge percentage at end" },
+              "currently_charging": { "type": "string", "description": "Current charging status" }
+            },
+            "required": ["rover_name"]
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "greenhab_specific": {
+      "type": "object",
+      "description": "GreenHab report fields — environmental conditions, watering, and harvest data.",
+      "properties": {
+        "environmental_control": { "type": "string", "description": "Fan and heater status" },
+        "avg_temperature": { "type": "string", "description": "Average temperature (last 24h)" },
+        "max_temperature": { "type": "string", "description": "Maximum temperature (last 24h)" },
+        "min_temperature": { "type": "string", "description": "Minimum temperature (last 24h)" },
+        "supplemental_light_hours": { "type": "string", "description": "Hours of artificial lighting, or 'Disabled'" },
+        "daily_water_usage_crops": { "type": "string", "description": "Water used for crops (e.g., '15 liters')" },
+        "daily_water_usage_other": { "type": "string", "description": "Water used for research or other" },
+        "blue_tank_remaining": { "type": "number", "minimum": 0, "maximum": 160, "description": "Gallons remaining in blue tank (0-160 useful capacity)" },
+        "watering_times": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Array of watering times (HH:MM format)"
+        },
+        "crops_changes": { "type": "string", "description": "Changes to crop status" },
+        "narrative": { "type": "string", "description": "Detailed GreenHab narrative" },
+        "harvests": {
+          "type": "array",
+          "description": "Harvest data entries",
+          "items": {
+            "type": "object",
+            "properties": {
+              "crop": { "type": "string", "description": "Crop type (e.g., Tomatoes, Lettuce)" },
+              "mass": { "type": "string", "description": "Mass harvested (e.g., '250g')" }
+            },
+            "required": ["crop", "mass"]
+          }
+        },
+        "support_needed": { "type": "string", "description": "Supplies or support needed" },
+        "attached_pictures": { "type": "boolean", "description": "Whether pictures are included" }
+      },
+      "required": ["environmental_control", "avg_temperature", "max_temperature", "min_temperature", "supplemental_light_hours", "daily_water_usage_crops", "blue_tank_remaining", "narrative"],
+      "additionalProperties": false
+    },
+    "eva_report_specific": {
+      "type": "object",
+      "description": "EVA Report fields — post-EVA debrief with narrative and route data.",
+      "properties": {
+        "eva_number": { "type": "string", "description": "EVA number/identifier" },
+        "purpose": { "type": "string", "description": "Purpose and objectives of EVA" },
+        "start_time": { "type": "string", "description": "Start time (HH:MM format)" },
+        "end_time": { "type": "string", "description": "End time (HH:MM format)" },
+        "narrative": { "type": "string", "description": "Detailed EVA narrative" },
+        "destination": { "type": "string", "description": "EVA destination name" },
+        "coord_easting": { "type": "string", "description": "UTM easting coordinate" },
+        "coord_northing": { "type": "string", "description": "UTM northing coordinate" },
+        "participants": { "type": "string", "description": "List of EVA participants" },
+        "routes": { "type": "string", "description": "Route description" },
+        "mode_of_travel": { "type": "string", "description": "Travel method (e.g., Walking, Rover)" }
+      },
+      "required": ["eva_number", "purpose", "narrative"],
+      "additionalProperties": false
+    },
+    "eva_request_specific": {
+      "type": "object",
+      "description": "EVA Request fields — pre-EVA planning and approval request.",
+      "properties": {
+        "eva_number": { "type": "string", "description": "Planned EVA number" },
+        "request_date": { "type": "string", "description": "Date request was made" },
+        "requested_eva_date": { "type": "string", "description": "Desired EVA date" },
+        "requested_start_time": { "type": "string", "description": "Desired start time" },
+        "requested_end_time": { "type": "string", "description": "Desired end time" },
+        "weather_supports_eva": { "type": "string", "description": "Weather assessment (Yes/No + explanation)" },
+        "purpose": { "type": "string", "description": "Purpose and objectives" },
+        "destination": { "type": "string", "description": "Destination name" },
+        "coordinates": { "type": "string", "description": "UTM coordinates" },
+        "participants": { "type": "string", "description": "Planned participants" },
+        "routes": { "type": "string", "description": "Planned route(s)" },
+        "mode_of_travel": { "type": "string", "description": "Travel method" },
+        "vehicles": { "type": "string", "description": "Vehicles to use (e.g., Spirit, Perseverance)" }
+      },
+      "required": ["eva_number", "requested_eva_date", "purpose"],
+      "additionalProperties": false
+    },
+    "journalist_specific": {
+      "type": "object",
+      "description": "Journalist Report fields — crew journalist's daily narrative.",
+      "properties": {
+        "journalist_report_title": { "type": "string", "description": "Report title" },
+        "report_body": { "type": "string", "description": "Main report content (supports Markdown)" }
+      },
+      "required": ["report_body"],
+      "additionalProperties": false
+    },
+    "astronomy_specific": {
+      "type": "object",
+      "description": "Astronomy Report fields — observatory operations and imaging.",
+      "properties": {
+        "robotic_telescope_requested": {
+          "type": "string",
+          "enum": ["MDRS-14", "MDRS-WF"],
+          "description": "Robotic telescope used"
+        },
+        "objects_to_be_imaged": { "type": "string", "description": "Celestial objects to image" },
+        "robotic_images_submitted": { "type": "string", "description": "Number/description of images submitted" },
+        "robotic_problems_encountered": { "type": "string", "description": "Issues with robotic telescope" },
+        "solar_features_observed": { "type": "string", "description": "Solar features observed" },
+        "musk_images_submitted": { "type": "string", "description": "Number/description of Musk Observatory images" },
+        "musk_problems_encountered": { "type": "string", "description": "Issues with Musk Observatory" }
+      },
+      "additionalProperties": false
+    },
+    "photos_specific": {
+      "type": "object",
+      "description": "Photos of the Day fields — daily photo submissions with captions.",
+      "properties": {
+        "photos": {
+          "type": "array",
+          "description": "Photo entries",
+          "items": {
+            "type": "object",
+            "properties": {
+              "filename": { "type": "string", "description": "Filename or reference" },
+              "original_name": { "type": "string", "description": "Original upload filename" },
+              "caption": { "type": "string", "description": "Photo caption" },
+              "file_path": { "type": "string", "description": "File path or URL" }
+            },
+            "required": ["filename", "caption"]
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "hso_checklist_specific": {
+      "type": "object",
+      "description": "Health & Safety Officer Checklist fields — facility safety equipment checks.",
+      "properties": {
+        "stairs_functional": { "type": "string", "description": "Status of stairs" },
+        "emergency_window_functional": { "type": "string", "description": "Status of emergency window" },
+        "commanders_window_functional": { "type": "string", "description": "Status of commander's window" },
+        "first_aid_inventory": { "type": "string", "description": "First aid supplies status" },
+        "safety_issues": { "type": "string", "description": "Safety issues observed" },
+        "health_environmental_issues": { "type": "string", "description": "Health/environmental issues" },
+        "missing_recommended_supplies": { "type": "string", "description": "Missing supplies list" },
+        "equipment_notes": { "type": "string", "description": "Additional equipment notes" },
+        "equipment": {
+          "type": "object",
+          "description": "Equipment check matrix. Keys are location names, values are objects mapping equipment type to boolean status.",
+          "properties": {
+            "hab_upper": { "$ref": "#/definitions/hso_equipment_location" },
+            "hab_lower": { "$ref": "#/definitions/hso_equipment_location" },
+            "ram": { "$ref": "#/definitions/hso_equipment_location" },
+            "greenhab": { "$ref": "#/definitions/hso_equipment_location" },
+            "sciencedome": { "$ref": "#/definitions/hso_equipment_location" }
+          },
+          "additionalProperties": { "$ref": "#/definitions/hso_equipment_location" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "hso_equipment_location": {
+      "type": "object",
+      "description": "Equipment check flags for a single location.",
+      "properties": {
+        "escape_ladder": { "type": "boolean" },
+        "eyewash": { "type": "boolean" },
+        "fire_blanket": { "type": "boolean" },
+        "fire_extinguisher": { "type": "boolean" },
+        "first_aid": { "type": "boolean" },
+        "intercom": { "type": "boolean" },
+        "radios": { "type": "boolean" },
+        "nightlight": { "type": "boolean" },
+        "co_alarm": { "type": "boolean" },
+        "smoke_alarm": { "type": "boolean" },
+        "propane_alarm": { "type": "boolean" },
+        "eva_safety_kit": { "type": "boolean" }
+      },
+      "additionalProperties": { "type": "boolean" }
+    },
+    "science_specific": {
+      "type": "object",
+      "description": "Science Report fields — research activities and experiment updates.",
+      "properties": {
+        "science_report_title": { "type": "string", "description": "Title of the science report" },
+        "researcher": { "type": "string", "description": "Name of the researcher" },
+        "experiment_name": { "type": "string", "description": "Name of the experiment or study" },
+        "experiment_description": { "type": "string", "description": "Brief description of the experiment" },
+        "progress": { "type": "string", "description": "Progress made during this reporting period" },
+        "results": { "type": "string", "description": "Preliminary results or observations" },
+        "issues": { "type": "string", "description": "Issues encountered" },
+        "next_steps": { "type": "string", "description": "Planned next steps" },
+        "equipment_used": { "type": "string", "description": "Equipment or instruments used" },
+        "samples_collected": { "type": "integer", "minimum": 0, "description": "Number of samples collected" }
+      },
+      "additionalProperties": false
+    },
+    "end_of_mission_specific": {
+      "type": "object",
+      "description": "End of Mission report fields — final mission summary and recommendations.",
+      "properties": {
+        "mission_summary": { "type": "string", "description": "Overall mission summary narrative" },
+        "objectives_met": { "type": "string", "description": "Assessment of which objectives were met" },
+        "science_summary": { "type": "string", "description": "Summary of scientific work performed" },
+        "operations_summary": { "type": "string", "description": "Summary of operational status at mission end" },
+        "facility_condition": { "type": "string", "description": "Condition of the facility at departure" },
+        "recommendations": { "type": "string", "description": "Recommendations for future crews" },
+        "lessons_learned": { "type": "string", "description": "Key lessons learned during the mission" },
+        "crew_feedback": { "type": "string", "description": "General crew feedback and comments" }
+      },
+      "additionalProperties": false
+    },
+    "checkout_specific": {
+      "type": "object",
+      "description": "Checkout Checklist fields — facility condition verification at mission end.",
+      "properties": {
+        "damages": { "type": "string", "description": "Damages found description" },
+        "repair_estimate": { "type": "string", "description": "Estimated repair costs" },
+        "cleaning_fee_estimate": { "type": "string", "description": "Estimated cleaning fees" },
+        "cleaning_fee_actual": { "type": "string", "description": "Actual cleaning fees" },
+        "checklist": {
+          "type": "array",
+          "description": "Checkout checklist items organized by section",
+          "items": {
+            "type": "object",
+            "properties": {
+              "section": { "type": "string", "description": "Section name (e.g., Science Dome, GreenHab, Upper Deck)" },
+              "item_description": { "type": "string", "description": "What to check" },
+              "crew_confirmed": { "type": "boolean", "description": "Crew sign-off" },
+              "staff_confirmed": { "type": "boolean", "description": "Staff sign-off" },
+              "notes": { "type": "string", "description": "Notes" }
+            },
+            "required": ["section", "item_description"]
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "food_inventory_specific": {
+      "type": "object",
+      "description": "Food Inventory fields — tracking of food supplies by category.",
+      "properties": {
+        "items": {
+          "type": "array",
+          "description": "Food inventory items",
+          "items": {
+            "type": "object",
+            "properties": {
+              "food_type": {
+                "type": "string",
+                "description": "Category (e.g., Baking, Freeze Dried, Cereal, Dairy, Canned Goods, Grains & Pasta, Proteins, Snacks, Beverages, Condiments & Spices)"
+              },
+              "item_name": { "type": "string", "description": "Item name" },
+              "starting_amount": { "type": "string", "description": "Initial amount" },
+              "unit": { "type": "string", "description": "Unit of measure (lbs, cans, boxes, bags, etc.)" },
+              "weight_lbs": { "type": "string", "description": "Weight in pounds" },
+              "remaining_fraction": { "type": "string", "description": "Remaining amount (e.g., '1/2', '3/4', 'empty')" }
+            },
+            "required": ["food_type", "item_name"]
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "properties": {
+    "report_id": {
+      "type": "string",
+      "description": "Unique ID (renamed from post_id for clarity)"
+    },
+    "report_uuid": {
+      "type": "string",
+      "format": "uuid",
+      "description": "UUID v4 for unique identification without central authority"
+    },
+    "title": {
+      "type": "string",
+      "description": "Report title, what you would see as the top heading or browse hyperlink."
+    },
+    "publish_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamps used for all dates in this template."
+    },
+    "author": {
+      "type": "string",
+      "description": "Report author"
+    },
+    "station": {
+      "type": "string",
+      "description": "Analog station name (e.g., MDRS, Flashline)"
+    },
+    "mission_name": {
+      "type": "string",
+      "description": "Format can be specific to habitat or crew increment"
+    },
+    "crew_number": {
+      "type": "string",
+      "description": "Integer Crew number, if any."
+    },
+    "mission_type": {
+      "type": "string",
+      "description": "Should be defined in the future"
+    },
+    "mission_start_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Start of the mission or crew increment. Can be used with the next field to calculate which date this report covers."
+    },
+    "mission_duration_day": {
+      "type": "integer",
+      "description": "Integer days of the mission or crew increment. For Mars Analogs, this is the same as 'Sol #'"
+    },
+    "report_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Specific date this report was covering. Should be same as the above date (Start of mission + sol #)."
+    },
+    "report_type": {
+      "type": "string",
+      "enum": [
+        "sol_summary",
+        "operations_report", "operations",
+        "greenhab_report", "greenhab",
+        "eva_report",
+        "eva_request",
+        "journalist_report", "journalist",
+        "astronomy_report", "astronomy",
+        "photos_of_the_day", "photos",
+        "hso_checklist",
+        "science_report", "science",
+        "end_of_mission_report", "end_of_mission",
+        "checkout_checklist", "checkout",
+        "food_inventory"
+      ],
+      "description": "Report type identifier. Canonical (longer) forms are preferred for storage; short aliases are also accepted. Determines the expected structure of role_specific_data."
+    },
+    "role_specific_data": {
+      "type": "object",
+      "description": "Typed, role-specific data for this report type. Schema is determined by the report_type value. Use metadata.custom for truly ad-hoc extensions."
+    },
+    "categories": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Optional; Array for classification/categories"
+    },
+    "tags": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Optional; Array for keywords"
+    },
+    "crew_members": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "role": { "type": "string", "description": "Free string (no enum for universality)" },
+          "affiliation": { "type": "string", "description": "Optional: e.g., university, agency" },
+          "equipment_assigned": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "equipment_id": { "type": "string" },
+                "equipment_type": { "type": "string" },
+                "equipment_name": { "type": "string" },
+                "notes": { "type": "string" }
+              },
+              "required": ["equipment_id", "equipment_type", "equipment_name"]
+            }
+          }
+        },
+        "required": ["name", "role"]
+      },
+      "description": "Optional; Array of crew members and roles. Not necessary for every report. Suitable for crew bios, initial plan, or final mission summary report."
+    },
+    "eva_data": {
+      "type": "object",
+      "properties": {
+        "planned_waypoints": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "waypoint_id": { "type": "string" },
+              "name": { "type": "string" },
+              "utm_coordinates": {
+                "type": "object",
+                "properties": {
+                  "zone": { "type": "string" },
+                  "easting": { "type": "number" },
+                  "northing": { "type": "number" },
+                  "elevation_m": { "type": "number" }
+                },
+                "required": ["zone", "easting", "northing"]
+              },
+              "planned_activities": {
+                "type": "array",
+                "items": { "type": "string" }
+              },
+              "estimated_duration_minutes": { "type": "number" },
+              "assigned_crew": {
+                "type": "array",
+                "items": { "type": "string" }
+              }
+            },
+            "required": ["waypoint_id", "name", "utm_coordinates"]
+          }
+        },
+        "actual_waypoints": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "waypoint_id": { "type": "string" },
+              "name": { "type": "string" },
+              "utm_coordinates": {
+                "type": "object",
+                "properties": {
+                  "zone": { "type": "string" },
+                  "easting": { "type": "number" },
+                  "northing": { "type": "number" },
+                  "elevation_m": { "type": "number" }
+                },
+                "required": ["zone", "easting", "northing"]
+              },
+              "activities_completed": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "type": { "type": "string" },
+                    "method": { "type": "string" },
+                    "collection_type": { "type": "string" },
+                    "desired_result": { "type": "string" },
+                    "actual_result": { "type": "string" },
+                    "notes": { "type": "string" },
+                    "crew_member": { "type": "string" }
+                  },
+                  "required": ["type"]
+                }
+              },
+              "observations": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "type": { "type": "string" },
+                    "description": { "type": "string" },
+                    "coordinates": {
+                      "type": "object",
+                      "properties": {
+                        "zone": { "type": "string" },
+                        "easting": { "type": "number" },
+                        "northing": { "type": "number" },
+                        "elevation_m": { "type": "number" }
+                      },
+                      "required": ["zone", "easting", "northing"]
+                    },
+                    "observer": { "type": "string" }
+                  },
+                  "required": ["type", "description"]
+                }
+              },
+              "duration_minutes": { "type": "number" },
+              "crew_present": {
+                "type": "array",
+                "items": { "type": "string" }
+              }
+            },
+            "required": ["waypoint_id", "name", "utm_coordinates"]
+          }
+        }
+      },
+      "description": "Optional; EVA planning and execution data with waypoint-level detail"
+    },
+    "content": {
+      "type": "string",
+      "description": "Main Content of Report; free-form formatted text (e.g., Markdown or lightweight HTML)"
+    },
+    "objectives": {
+      "type": "string",
+      "description": "Optional; Planned goals"
+    },
+    "outcomes": {
+      "type": "string",
+      "description": "Optional; Results"
+    },
+    "resource_usage": {
+      "type": "object",
+      "properties": {
+        "water_consumed_liters": { "type": "number" },
+        "power_used_kwh": { "type": "number" },
+        "food_stocks_remaining_percent": { "type": "number" }
+      },
+      "additionalProperties": { "type": "number" },
+      "description": "Optional; Common in analogs for sustainability tracking"
+    },
+    "environmental_data": {
+      "type": "object",
+      "properties": {
+        "temperature_c": { "type": "number" },
+        "wind_speed_kph": { "type": "number" },
+        "notes": { "type": "string" }
+      },
+      "additionalProperties": true,
+      "description": "Optional; e.g., weather, radiation (varies by station)"
+    },
+    "health_and_safety": {
+      "type": "object",
+      "properties": {
+        "incidents": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "type": { "type": "string" },
+              "description": { "type": "string" },
+              "severity": { "type": "string" },
+              "resolution": { "type": "string" }
+            }
+          },
+          "description": "Optional; used to classify a reported incident. Other current station procedures should also be followed when reporting an incident."
+        },
+        "morale_level": {
+          "type": "string",
+          "description": "Optional; String, can be anything."
+        },
+        "medical_notes": {
+          "type": "string",
+          "description": "Optional; String, can be anything. Be careful to maintain privacy of crewmembers."
+        }
+      },
+      "additionalProperties": true,
+      "description": "Optional; can be used for Health & Safety Report."
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "attachments": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "custom": { "type": "object" }
+      },
+      "additionalProperties": true,
+      "description": "Extensible for truly ad-hoc data. Use role_specific_data for typed, role-specific fields."
+    }
+  },
+  "required": [
+    "report_id",
+    "title",
+    "publish_date",
+    "author",
+    "station",
+    "mission_name",
+    "crew_number",
+    "mission_type",
+    "mission_start_date",
+    "mission_duration_day",
+    "report_date",
+    "report_type",
+    "content"
+  ],
+  "allOf": [
+    {
+      "if": {
+        "properties": { "report_type": { "const": "sol_summary" } },
+        "required": ["report_type"]
+      },
+      "then": {
+        "properties": { "role_specific_data": { "$ref": "#/definitions/sol_summary_specific" } }
+      }
+    },
+    {
+      "if": {
+        "properties": { "report_type": { "enum": ["operations_report", "operations"] } },
+        "required": ["report_type"]
+      },
+      "then": {
+        "properties": { "role_specific_data": { "$ref": "#/definitions/operations_specific" } }
+      }
+    },
+    {
+      "if": {
+        "properties": { "report_type": { "enum": ["greenhab_report", "greenhab"] } },
+        "required": ["report_type"]
+      },
+      "then": {
+        "properties": { "role_specific_data": { "$ref": "#/definitions/greenhab_specific" } }
+      }
+    },
+    {
+      "if": {
+        "properties": { "report_type": { "const": "eva_report" } },
+        "required": ["report_type"]
+      },
+      "then": {
+        "properties": { "role_specific_data": { "$ref": "#/definitions/eva_report_specific" } }
+      }
+    },
+    {
+      "if": {
+        "properties": { "report_type": { "const": "eva_request" } },
+        "required": ["report_type"]
+      },
+      "then": {
+        "properties": { "role_specific_data": { "$ref": "#/definitions/eva_request_specific" } }
+      }
+    },
+    {
+      "if": {
+        "properties": { "report_type": { "enum": ["journalist_report", "journalist"] } },
+        "required": ["report_type"]
+      },
+      "then": {
+        "properties": { "role_specific_data": { "$ref": "#/definitions/journalist_specific" } }
+      }
+    },
+    {
+      "if": {
+        "properties": { "report_type": { "enum": ["astronomy_report", "astronomy"] } },
+        "required": ["report_type"]
+      },
+      "then": {
+        "properties": { "role_specific_data": { "$ref": "#/definitions/astronomy_specific" } }
+      }
+    },
+    {
+      "if": {
+        "properties": { "report_type": { "enum": ["photos_of_the_day", "photos"] } },
+        "required": ["report_type"]
+      },
+      "then": {
+        "properties": { "role_specific_data": { "$ref": "#/definitions/photos_specific" } }
+      }
+    },
+    {
+      "if": {
+        "properties": { "report_type": { "const": "hso_checklist" } },
+        "required": ["report_type"]
+      },
+      "then": {
+        "properties": { "role_specific_data": { "$ref": "#/definitions/hso_checklist_specific" } }
+      }
+    },
+    {
+      "if": {
+        "properties": { "report_type": { "enum": ["science_report", "science"] } },
+        "required": ["report_type"]
+      },
+      "then": {
+        "properties": { "role_specific_data": { "$ref": "#/definitions/science_specific" } }
+      }
+    },
+    {
+      "if": {
+        "properties": { "report_type": { "enum": ["end_of_mission_report", "end_of_mission"] } },
+        "required": ["report_type"]
+      },
+      "then": {
+        "properties": { "role_specific_data": { "$ref": "#/definitions/end_of_mission_specific" } }
+      }
+    },
+    {
+      "if": {
+        "properties": { "report_type": { "enum": ["checkout_checklist", "checkout"] } },
+        "required": ["report_type"]
+      },
+      "then": {
+        "properties": { "role_specific_data": { "$ref": "#/definitions/checkout_specific" } }
+      }
+    },
+    {
+      "if": {
+        "properties": { "report_type": { "const": "food_inventory" } },
+        "required": ["report_type"]
+      },
+      "then": {
+        "properties": { "role_specific_data": { "$ref": "#/definitions/food_inventory_specific" } }
+      }
+    }
+  ]
+}

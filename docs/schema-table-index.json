@@ -1,0 +1,393 @@
+{
+  "_description": "Machine-readable index of all database tables. Use this to quickly look up any table's purpose, columns, relationships, and which code files use it.",
+  "_source": "backend/src/database/schema.sql",
+  "_generated": "2026-03-02",
+
+  "tables": {
+    "sol_summary_reports": {
+      "group": "role-specific",
+      "report_type": "Sol Summary",
+      "form": "SolSummaryForm.js",
+      "api_route": "/api/reports/sol-summary",
+      "repository": "solSummaryRepository.ts",
+      "parent_table": null,
+      "child_tables": [],
+      "primary_key": "id",
+      "pk_type": "UUID (declared INTEGER, receives TEXT)",
+      "columns": [
+        "id", "report_id", "crew_number", "position", "prepared_by", "report_date", "sol",
+        "summary_title", "mission_status", "sol_activity_summary", "look_ahead_plan",
+        "anomalies", "weather", "crew_physical_status", "eva", "reports_to_be_filed",
+        "support_requested", "email_subject", "email_body", "created_at"
+      ],
+      "indexes": ["idx_sol_summary_crew", "idx_sol_summary_date"]
+    },
+
+    "operations_reports": {
+      "group": "role-specific",
+      "report_type": "Operations",
+      "form": "OperationsForm.js",
+      "api_route": "/api/reports/operations",
+      "repository": "operationsRepository.ts",
+      "parent_table": null,
+      "child_tables": ["operations_rover_readings"],
+      "primary_key": "id",
+      "pk_type": "UUID (declared INTEGER, receives TEXT)",
+      "columns": [
+        "id", "report_id", "crew_number", "position", "prepared_by", "report_date", "sol",
+        "non_nominal_systems", "notes_on_non_nominal", "general_notes_on_rovers",
+        "summary_of_hab_operations", "water_use", "main_tank_level",
+        "main_water_tank_pipe_heater", "main_water_tank_heater", "toilet_tank_emptied",
+        "summary_of_internet", "summary_of_suits_and_radios", "summary_of_greenhab",
+        "greenhab_water_use_gallons", "greenhab_heater", "greenhab_supplemental_light",
+        "greenhab_harvest", "summary_of_sciencedome", "dual_split", "summary_of_ram",
+        "summary_of_observatory", "summary_of_health_safety", "questions_to_mission_support",
+        "email_subject", "email_body", "created_at"
+      ],
+      "indexes": ["idx_operations_crew", "idx_operations_date"]
+    },
+    "operations_rover_readings": {
+      "group": "role-specific",
+      "parent_table": "operations_reports",
+      "foreign_key": {"column": "operations_report_id", "references": "operations_reports(id)", "type_mismatch": "declared INTEGER, receives TEXT UUID"},
+      "columns": ["id", "operations_report_id", "rover_name", "rover_used", "hours", "beginning_charge", "ending_charge", "currently_charging"],
+      "rows_per_report": 4
+    },
+
+    "greenhab_reports": {
+      "group": "role-specific",
+      "report_type": "GreenHab",
+      "form": "GreenHabReport.js",
+      "api_route": "/api/reports/greenhab",
+      "repository": "greenhabRepository.ts",
+      "parent_table": null,
+      "child_tables": ["greenhab_watering_times", "greenhab_harvests"],
+      "primary_key": "id",
+      "pk_type": "TEXT (correctly declared)",
+      "columns": [
+        "id", "crew_number", "position", "report_prepared_by", "report_date", "sol",
+        "environmental_control", "avg_temperature", "max_temperature", "min_temperature",
+        "supplemental_light_hours", "daily_water_usage_crops", "daily_water_usage_other",
+        "blue_tank_remaining", "crops_changes", "narrative", "support_needed",
+        "attached_pictures", "email_subject", "email_body", "created_at"
+      ],
+      "column_naming_notes": "Uses 'report_prepared_by' instead of 'prepared_by'",
+      "indexes": ["idx_greenhab_reports_date", "idx_greenhab_reports_crew_number"]
+    },
+    "greenhab_watering_times": {
+      "group": "role-specific",
+      "parent_table": "greenhab_reports",
+      "foreign_key": {"column": "report_id", "references": "greenhab_reports(id)", "type_mismatch": null},
+      "columns": ["id", "report_id", "watering_time"]
+    },
+    "greenhab_harvests": {
+      "group": "role-specific",
+      "parent_table": "greenhab_reports",
+      "foreign_key": {"column": "report_id", "references": "greenhab_reports(id)", "type_mismatch": null},
+      "columns": ["id", "report_id", "crop_type", "mass_grams"]
+    },
+
+    "eva_reports": {
+      "group": "role-specific",
+      "report_type": "EVA Report",
+      "form": "EvaReportForm.js",
+      "api_route": "/api/reports/eva",
+      "repository": "evaReportRepository.ts",
+      "parent_table": null,
+      "child_tables": [],
+      "primary_key": "id",
+      "pk_type": "UUID (declared INTEGER, receives TEXT)",
+      "columns": [
+        "id", "report_id", "crew_number", "position", "prepared_by", "report_date", "sol",
+        "eva_number", "purpose", "start_time", "end_time", "narrative", "destination",
+        "coord_easting", "coord_northing", "participants", "routes", "mode_of_travel",
+        "email_subject", "email_body", "created_at"
+      ],
+      "indexes": ["idx_eva_reports_crew", "idx_eva_reports_date"]
+    },
+
+    "eva_requests": {
+      "group": "role-specific",
+      "report_type": "EVA Request",
+      "form": "EvaRequestForm.js",
+      "api_route": "/api/reports/eva-request",
+      "repository": "evaRequestRepository.ts",
+      "parent_table": null,
+      "child_tables": [],
+      "primary_key": "id",
+      "pk_type": "UUID (declared INTEGER, receives TEXT)",
+      "columns": [
+        "id", "report_id", "crew_number", "position", "prepared_by", "report_date", "sol",
+        "eva_number", "request_date", "requested_eva_date", "requested_start_time",
+        "requested_end_time", "weather_supports_eva", "purpose", "destination",
+        "coordinates", "participants", "routes", "mode_of_travel", "vehicles",
+        "email_subject", "email_body", "created_at"
+      ],
+      "indexes": ["idx_eva_requests_crew", "idx_eva_requests_date"]
+    },
+
+    "journalist_reports": {
+      "group": "role-specific",
+      "report_type": "Journalist",
+      "form": "JournalistForm.js",
+      "api_route": "/api/reports/journalist",
+      "repository": "journalistRepository.ts",
+      "parent_table": null,
+      "child_tables": [],
+      "primary_key": "id",
+      "pk_type": "UUID (declared INTEGER, receives TEXT)",
+      "columns": [
+        "id", "report_id", "crew_number", "position", "prepared_by", "report_date", "sol",
+        "journalist_report_title", "report_body", "email_subject", "email_body", "created_at"
+      ],
+      "indexes": ["idx_journalist_crew", "idx_journalist_date"]
+    },
+
+    "photos_of_the_day": {
+      "group": "role-specific",
+      "report_type": "Photos",
+      "form": "PhotosForm.js",
+      "api_route": "/api/reports/photos",
+      "repository": "photosRepository.ts",
+      "parent_table": null,
+      "child_tables": ["photo_attachments"],
+      "primary_key": "id",
+      "pk_type": "UUID (declared INTEGER, receives TEXT)",
+      "columns": [
+        "id", "report_id", "crew_number", "position", "prepared_by", "report_date", "sol",
+        "email_subject", "email_body", "created_at"
+      ],
+      "indexes": ["idx_photos_crew", "idx_photos_date"]
+    },
+    "photo_attachments": {
+      "group": "role-specific",
+      "parent_table": "photos_of_the_day",
+      "foreign_key": {"column": "photos_report_id", "references": "photos_of_the_day(id)", "type_mismatch": "declared INTEGER, receives TEXT UUID"},
+      "columns": ["id", "photos_report_id", "filename", "original_name", "caption", "file_path", "uploaded_at"]
+    },
+
+    "astronomy_reports": {
+      "group": "role-specific",
+      "report_type": "Astronomy",
+      "form": "AstronomyForm.js",
+      "api_route": "/api/reports/astronomy",
+      "repository": "astronomyRepository.ts",
+      "parent_table": null,
+      "child_tables": [],
+      "primary_key": "id",
+      "pk_type": "UUID (declared INTEGER, receives TEXT)",
+      "columns": [
+        "id", "report_id", "crew_number", "position", "prepared_by", "report_date", "sol",
+        "robotic_telescope_requested", "objects_to_be_imaged", "robotic_images_submitted",
+        "robotic_problems_encountered", "solar_features_observed", "musk_images_submitted",
+        "musk_problems_encountered", "email_subject", "email_body", "created_at"
+      ],
+      "indexes": ["idx_astronomy_crew", "idx_astronomy_date"]
+    },
+
+    "hso_checklists": {
+      "group": "role-specific",
+      "report_type": "HSO Checklist",
+      "form": "HsoChecklistForm.js",
+      "api_route": "/api/reports/hso-checklist",
+      "repository": "hsoChecklistRepository.ts",
+      "parent_table": null,
+      "child_tables": ["hso_equipment_checks"],
+      "primary_key": "id",
+      "pk_type": "UUID (declared INTEGER, receives TEXT)",
+      "columns": [
+        "id", "report_id", "crew_number", "position", "prepared_by", "report_date", "sol",
+        "stairs_functional", "emergency_window_functional", "commanders_window_functional",
+        "first_aid_inventory", "safety_issues", "health_environmental_issues",
+        "missing_recommended_supplies", "equipment_notes", "email_subject", "email_body", "created_at"
+      ],
+      "indexes": ["idx_hso_crew"]
+    },
+    "hso_equipment_checks": {
+      "group": "role-specific",
+      "parent_table": "hso_checklists",
+      "foreign_key": {"column": "checklist_id", "references": "hso_checklists(id)", "type_mismatch": "declared INTEGER, receives TEXT UUID"},
+      "columns": ["id", "checklist_id", "equipment_type", "location", "confirmed", "notes"],
+      "boolean_columns": ["confirmed"]
+    },
+
+    "checkout_checklists": {
+      "group": "role-specific",
+      "report_type": "Checkout",
+      "form": "CheckoutForm.js",
+      "api_route": "/api/reports/checkout",
+      "repository": "checkoutRepository.ts",
+      "parent_table": null,
+      "child_tables": ["checkout_items"],
+      "primary_key": "id",
+      "pk_type": "UUID (declared INTEGER, receives TEXT)",
+      "columns": [
+        "id", "report_id", "crew_number", "position", "prepared_by", "report_date", "sol",
+        "damages", "repair_estimate", "cleaning_fee_estimate", "cleaning_fee_actual",
+        "email_subject", "email_body", "created_at"
+      ],
+      "indexes": ["idx_checkout_crew"]
+    },
+    "checkout_items": {
+      "group": "role-specific",
+      "parent_table": "checkout_checklists",
+      "foreign_key": {"column": "checklist_id", "references": "checkout_checklists(id)", "type_mismatch": "declared INTEGER, receives TEXT UUID"},
+      "columns": ["id", "checklist_id", "section", "item_description", "crew_confirmed", "staff_confirmed", "notes"],
+      "boolean_columns": ["crew_confirmed", "staff_confirmed"]
+    },
+
+    "food_inventories": {
+      "group": "role-specific",
+      "report_type": "Food Inventory",
+      "form": "FoodInventoryForm.js",
+      "api_route": "/api/reports/food-inventory",
+      "repository": "foodInventoryRepository.ts",
+      "parent_table": null,
+      "child_tables": ["food_inventory_items"],
+      "primary_key": "id",
+      "pk_type": "UUID (declared INTEGER, receives TEXT)",
+      "columns": [
+        "id", "report_id", "crew_number", "position", "prepared_by", "report_date", "sol",
+        "email_subject", "email_body", "created_at"
+      ],
+      "indexes": ["idx_food_inv_crew"]
+    },
+    "food_inventory_items": {
+      "group": "role-specific",
+      "parent_table": "food_inventories",
+      "foreign_key": {"column": "inventory_id", "references": "food_inventories(id)", "type_mismatch": "declared INTEGER, receives TEXT UUID"},
+      "columns": ["id", "inventory_id", "food_type", "item_name", "starting_amount", "unit", "weight_lbs", "remaining_fraction"]
+    },
+
+    "crew_reports": {
+      "group": "legacy",
+      "report_type": "Crew Report (legacy)",
+      "form": "CrewReport.js",
+      "api_route": "/api/reports",
+      "repository": "crewReportRepository.ts",
+      "parent_table": null,
+      "child_tables": ["report_categories", "report_tags", "crew_members", "eva_planned_waypoints", "eva_actual_waypoints", "resource_usage", "environmental_data", "incidents", "health_and_safety_summary", "report_attachments", "report_custom_metadata"],
+      "primary_key": "report_id",
+      "pk_type": "TEXT",
+      "columns": [
+        "report_id", "report_uuid", "title", "publish_date", "author", "station",
+        "mission_name", "crew_number", "mission_type", "mission_start_date",
+        "mission_duration_day", "report_date", "report_type", "content",
+        "objectives", "outcomes", "created_at", "updated_at"
+      ],
+      "indexes": ["idx_crew_reports_report_date", "idx_crew_reports_station", "idx_crew_reports_crew_number", "idx_crew_reports_mission_type", "idx_crew_reports_report_type"]
+    },
+    "report_categories": {
+      "group": "legacy",
+      "parent_table": "crew_reports",
+      "foreign_key": {"column": "report_id", "references": "crew_reports(report_id)"},
+      "columns": ["id", "report_id", "category"],
+      "unique_constraints": ["(report_id, category)"]
+    },
+    "report_tags": {
+      "group": "legacy",
+      "parent_table": "crew_reports",
+      "foreign_key": {"column": "report_id", "references": "crew_reports(report_id)"},
+      "columns": ["id", "report_id", "tag"],
+      "unique_constraints": ["(report_id, tag)"]
+    },
+    "crew_members": {
+      "group": "legacy",
+      "parent_table": "crew_reports",
+      "foreign_key": {"column": "report_id", "references": "crew_reports(report_id)"},
+      "columns": ["id", "report_id", "name", "role", "affiliation"],
+      "code_mismatch": "Repository also inserts 'status' column not in schema"
+    },
+    "crew_equipment": {
+      "group": "legacy",
+      "parent_table": "crew_members",
+      "foreign_key": {"column": "crew_member_id", "references": "crew_members(id)"},
+      "columns": ["id", "crew_member_id", "equipment_id", "equipment_type", "equipment_name", "notes"]
+    },
+    "eva_planned_waypoints": {
+      "group": "legacy",
+      "parent_table": "crew_reports",
+      "foreign_key": {"column": "report_id", "references": "crew_reports(report_id)"},
+      "columns": ["id", "report_id", "waypoint_id", "name", "utm_zone", "utm_easting", "utm_northing", "elevation_m", "estimated_duration_minutes"]
+    },
+    "eva_planned_activities": {
+      "group": "legacy",
+      "parent_table": "eva_planned_waypoints",
+      "foreign_key": {"column": "waypoint_id", "references": "eva_planned_waypoints(id)"},
+      "columns": ["id", "waypoint_id", "activity"]
+    },
+    "eva_planned_crew": {
+      "group": "legacy",
+      "parent_table": "eva_planned_waypoints",
+      "foreign_key": {"column": "waypoint_id", "references": "eva_planned_waypoints(id)"},
+      "columns": ["id", "waypoint_id", "crew_member_name"]
+    },
+    "eva_actual_waypoints": {
+      "group": "legacy",
+      "parent_table": "crew_reports",
+      "foreign_key": {"column": "report_id", "references": "crew_reports(report_id)"},
+      "columns": ["id", "report_id", "waypoint_id", "name", "utm_zone", "utm_easting", "utm_northing", "elevation_m", "duration_minutes"]
+    },
+    "eva_activities_completed": {
+      "group": "legacy",
+      "parent_table": "eva_actual_waypoints",
+      "foreign_key": {"column": "waypoint_id", "references": "eva_actual_waypoints(id)"},
+      "columns": ["id", "waypoint_id", "activity_type", "method", "collection_type", "desired_result", "actual_result", "notes", "crew_member"]
+    },
+    "eva_observations": {
+      "group": "legacy",
+      "parent_table": "eva_actual_waypoints",
+      "foreign_key": {"column": "waypoint_id", "references": "eva_actual_waypoints(id)"},
+      "columns": ["id", "waypoint_id", "observation_type", "description", "obs_utm_zone", "obs_utm_easting", "obs_utm_northing", "observer"]
+    },
+    "eva_actual_crew": {
+      "group": "legacy",
+      "parent_table": "eva_actual_waypoints",
+      "foreign_key": {"column": "waypoint_id", "references": "eva_actual_waypoints(id)"},
+      "columns": ["id", "waypoint_id", "crew_member_name"]
+    },
+    "resource_usage": {
+      "group": "legacy",
+      "parent_table": "crew_reports",
+      "foreign_key": {"column": "report_id", "references": "crew_reports(report_id)"},
+      "columns": ["id", "report_id", "water_consumed_liters", "power_used_kwh", "food_stocks_remaining_percent"]
+    },
+    "environmental_data": {
+      "group": "legacy",
+      "parent_table": "crew_reports",
+      "foreign_key": {"column": "report_id", "references": "crew_reports(report_id)"},
+      "columns": ["id", "report_id", "temperature_c", "humidity_percent", "pressure_kpa", "wind_speed_kph", "notes"]
+    },
+    "incidents": {
+      "group": "legacy",
+      "parent_table": "crew_reports",
+      "foreign_key": {"column": "report_id", "references": "crew_reports(report_id)"},
+      "columns": ["id", "report_id", "incident_type", "description", "severity", "resolution"]
+    },
+    "health_and_safety_summary": {
+      "group": "legacy",
+      "parent_table": "crew_reports",
+      "foreign_key": {"column": "report_id", "references": "crew_reports(report_id)"},
+      "columns": ["id", "report_id", "morale_level", "medical_notes"]
+    },
+    "report_attachments": {
+      "group": "legacy",
+      "parent_table": "crew_reports",
+      "foreign_key": {"column": "report_id", "references": "crew_reports(report_id)"},
+      "columns": ["id", "report_id", "attachment_filename"]
+    },
+    "report_custom_metadata": {
+      "group": "legacy",
+      "parent_table": "crew_reports",
+      "foreign_key": {"column": "report_id", "references": "crew_reports(report_id)"},
+      "columns": ["id", "report_id", "custom_data"]
+    }
+  },
+
+  "missing_tables_referenced_in_code": [
+    {"table": "eva_data", "file": "crewReportRepository.ts", "columns": ["id", "report_id", "eva_number", "duration_minutes", "safety_notes"]},
+    {"table": "eva_participants", "file": "crewReportRepository.ts", "columns": ["id", "eva_data_id", "participant_name"]},
+    {"table": "eva_objectives", "file": "crewReportRepository.ts", "columns": ["id", "eva_data_id", "objective"]},
+    {"table": "resources", "file": "crewReportRepository.ts", "columns": ["id", "report_id", "water_usage_liters", "power_usage_kwh", "food_consumption"]}
+  ]
+}

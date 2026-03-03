@@ -1,0 +1,56 @@
+.shared-header {
+  margin-bottom: 10px;
+}
+
+.shared-header h2 {
+  margin: 0 0 20px 0;
+  color: #333;
+  font-size: 1.4em;
+  font-weight: 600;
+  border-bottom: 1px solid #000;
+  padding-bottom: 10px;
+  text-align: left;
+}
+
+.shared-header .form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.shared-header .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  text-align: left;
+}
+
+.shared-header .form-group label {
+  font-weight: 500;
+  color: #333;
+  font-size: 0.95em;
+}
+
+.shared-header .form-group input {
+  padding: 10px 12px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 1em;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.shared-header .form-group input:focus {
+  outline: none;
+  border-color: #333;
+  box-shadow: 0 0 0 2px rgba(51, 51, 51, 0.1);
+}
+
+.shared-header .error {
+  color: #dc3545;
+  font-size: 0.85em;
+  margin-top: 4px;
+  font-weight: 500;
+}

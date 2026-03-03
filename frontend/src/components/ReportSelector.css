@@ -1,0 +1,121 @@
+.report-selector-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  text-align: left;
+}
+
+.report-selector {
+  width: 100%;
+}
+
+.selector-header {
+  text-align: left;
+  margin-bottom: 30px;
+}
+
+.selector-header h1 {
+  margin: 0 0 10px 0;
+  font-size: 2em;
+  font-weight: 600;
+  color: #333;
+}
+
+.selector-header p {
+  margin: 0;
+  font-size: 1em;
+  color: #666;
+}
+
+.report-section {
+  margin-bottom: 30px;
+}
+
+.report-section h2 {
+  margin: 0 0 20px 0;
+  color: #333;
+  font-size: 1.4em;
+  font-weight: 600;
+  border-bottom: 1px solid #000;
+  padding-bottom: 10px;
+  text-align: left;
+}
+
+.report-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+  margin-bottom: 10px;
+}
+
+.report-card {
+  background: #fff;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  padding: 20px;
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  text-align: left;
+}
+
+.report-card:hover {
+  border-color: #333;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.report-card:focus {
+  outline: none;
+  border-color: #333;
+  box-shadow: 0 0 0 2px rgba(51, 51, 51, 0.1);
+}
+
+.report-card:active {
+  background: #f8f9fa;
+}
+
+.report-card-name {
+  margin: 0 0 8px 0;
+  font-size: 1.1em;
+  font-weight: 600;
+  color: #333;
+}
+
+.report-card-filed-by {
+  margin: 0 0 4px 0;
+  font-size: 0.9em;
+  color: #555;
+  font-weight: 500;
+}
+
+.report-card-frequency {
+  margin: 0;
+  font-size: 0.85em;
+  color: #888;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .report-cards-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .selector-header h1 {
+    font-size: 1.5em;
+  }
+
+  .report-section h2 {
+    font-size: 1.2em;
+  }
+}
+
+@media (max-width: 480px) {
+  .report-card {
+    padding: 15px;
+  }
+
+  .report-card-name {
+    font-size: 1em;
+  }
+}

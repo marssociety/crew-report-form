@@ -5,7 +5,7 @@
   "scripts": {
     "start": "node dist/index.js",
     "dev": "nodemon --exec ts-node src/index.ts",
-    "build": "tsc && cp src/database/schema.sql dist/database/schema.sql && cp src/schema.json dist/schema.json 2>/dev/null || true",
+    "build": "tsc && cp src/database/schema.sql dist/database/schema.sql && cp src/report_schema.json dist/report_schema.json",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -19,16 +19,14 @@
     "express": "^5.1.0",
     "helmet": "^8.1.0",
     "morgan": "^1.10.1",
-    "sqlite3": "^5.1.7",
-    "uuid": "^11.1.0"
+    "pg": "^8.19.0"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
     "@types/morgan": "^1.9.10",
     "@types/node": "^24.1.0",
-    "@types/sqlite3": "^3.1.11",
-    "@types/uuid": "^10.0.0",
+    "@types/pg": "^8.18.0",
     "nodemon": "^3.1.10",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3"
