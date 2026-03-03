@@ -30,6 +30,7 @@ All forms share common header fields (crew number, date, sol, prepared by) and g
 
 ### Prerequisites
 - Node.js 18+ and npm
+- PostgreSQL 15+ (local via Docker or native install)
 
 ### Development
 
@@ -38,10 +39,13 @@ All forms share common header fields (crew number, date, sol, prepared by) and g
 git clone https://github.com/YOUR-USERNAME/crew-report-form.git
 cd crew-report-form
 
+# Start PostgreSQL (Docker)
+docker run -d --name crew-pg -e POSTGRES_DB=crew_reports -e POSTGRES_PASSWORD=dev -p 5432:5432 postgres:17
+
 # Backend (Terminal 1)
 cd backend
 npm install
-npm run dev            # Runs on http://localhost:3001
+DATABASE_URL=postgresql://postgres:dev@localhost:5432/crew_reports npm run dev
 
 # Frontend (Terminal 2)
 cd frontend
@@ -58,7 +62,7 @@ Open http://localhost:3000 in your browser. Password: `hanksville`
 cd backend
 npm ci
 npm run build
-npm start              # Serves API on port 3001
+DATABASE_URL=postgresql://... npm start   # Serves API on port 3001
 
 # Frontend
 cd frontend
@@ -84,17 +88,23 @@ frontend/          React 19 SPA (Create React App)
 
 backend/           Express 5 + TypeScript API
   src/
-    index.ts         Server entry, route mounting
-    routes/          One route file per report type
+    index.ts              Server entry, route mounting
+    validation.ts         AJV per-type validation (discriminated union)
+    report_schema.json    Official crew-report-template JSON Schema
+    routes/
+      reportRouteFactory.ts  Generic route factory (POST/GET/DELETE)
+      *.ts                   2-line wrappers per report type
     database/
-      database.ts    SQLite singleton wrapper
-      schema.sql     Full database schema
-      *Repository.ts One repository per report type
+      database.ts         PostgreSQL Pool wrapper
+      schema.sql          Unified table DDL
+      reportRepository.ts Unified repository (all report types)
 ```
 
-**Data flow**: Form → POST `/api/reports/<type>` → Repository → SQLite
+**Data flow**: Form → `buildTemplatePayload()` → POST `/api/reports/<type>` → AJV validation → `reportRepository.save()` → PostgreSQL JSONB
 
-**Database**: SQLite at `backend/data/crew_reports.db` (auto-created from `schema.sql` on first run)
+**Submission format**: All forms submit in the [crew-report-template](https://github.com/marssociety/crew-report-template) format with envelope fields (`report_type`, `crew_number`, `report_date`, `sol`) and a `role_specific_data` object containing type-specific fields.
+
+**Database**: PostgreSQL with a single unified `reports` table. Envelope fields are columns; role-specific data is stored in a JSONB `report_data` column. Schema auto-created from `schema.sql` on first run.
 
 ---
 
@@ -111,8 +121,9 @@ GET    /api/reports/<type>/:id   Get a specific report
 Where `<type>` is: `sol-summary`, `operations`, `greenhab`, `eva`, `eva-request`, `journalist`, `photos`, `astronomy`, `hso-checklist`, `checkout`, `food-inventory`
 
 Additional:
-- `GET /api/schema` — JSON validation schema
-- `POST /api/validate` — Validate report data
+- `GET /api/schema` — JSON validation schema (crew-report-template format)
+- `GET /api/schema/types` — List of all valid report_type enum values
+- `POST /api/validate` — Validate report data against per-type schemas
 - `GET /health` — Health check
 
 ---
@@ -123,6 +134,7 @@ Additional:
 ```
 NODE_ENV=production
 PORT=3001
+DATABASE_URL=postgresql://localhost:5432/crew_reports
 ```
 
 **Frontend** (`frontend/.env.production`):
@@ -147,7 +159,7 @@ See [DEPLOYMENT.md](DEPLOYMENT.md) for full step-by-step instructions.
 ## Tech Stack
 
 - **Frontend**: React 19, React Hook Form, CSS3
-- **Backend**: Express 5, TypeScript, SQLite3, AJV (JSON Schema validation)
+- **Backend**: Express 5, TypeScript, PostgreSQL (pg), AJV (JSON Schema validation with per-type discriminated union)
 - **Security**: Helmet.js headers, CORS, parameterized SQL queries
 - **Production**: PM2 process manager, Nginx reverse proxy, Let's Encrypt SSL
 
@@ -155,9 +167,10 @@ See [DEPLOYMENT.md](DEPLOYMENT.md) for full step-by-step instructions.
 
 ## Development Notes
 
-- `npm run build` in backend compiles TypeScript and copies `schema.sql` + `schema.json` to `dist/`
-- Delete `backend/data/crew_reports.db` to reset the database (regenerates on restart)
+- `npm run build` in backend compiles TypeScript and copies `schema.sql` and `report_schema.json` to `dist/`
+- To reset the database: `DROP TABLE reports;` in psql — table regenerates on server start
 - Frontend reads `REACT_APP_API_URL` at build time; defaults to `http://localhost:3001` in dev
+- Migration script at `backend/scripts/migrate-sqlite-to-pg.ts` for migrating from old SQLite data
 - See [Claude.md](Claude.md) for detailed AI development context
 
 ---

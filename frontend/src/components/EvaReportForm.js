@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import SharedHeader from './SharedHeader';
+import { buildTemplatePayload } from '../utils/templatePayload';
 import './EvaReportForm.css';
 
 const EvaReportForm = () => {
@@ -74,14 +75,11 @@ Mode of travel: ${data.modeOfTravel}`;
     setSubmitStatus(null);
 
     try {
-      const reportData = {
-        ...data,
-        reportDate: data.date,
-        reportType: 'eva',
-        emailSubject: generateEmailSubject(),
-        emailBody: generateEmailBody(data),
-        submittedAt: new Date().toISOString()
-      };
+      const reportData = buildTemplatePayload(
+        data, 'eva_report',
+        generateEmailSubject(),
+        generateEmailBody(data)
+      );
 
       const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:3001';
       const response = await fetch(`${apiUrl}/api/reports/eva`, {

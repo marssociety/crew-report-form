@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import SharedHeader from './SharedHeader';
+import { buildTemplatePayload } from '../utils/templatePayload';
 import './HsoChecklistForm.css';
 
 const EQUIPMENT_TYPES = [
@@ -145,14 +146,11 @@ Equipment notes: ${data.equipmentNotes || 'N/A'}`;
     setSubmitStatus(null);
 
     try {
-      const reportData = {
-        ...data,
-        reportDate: data.date,
-        reportType: 'hso-checklist',
-        emailSubject: generateEmailSubject(),
-        emailBody: generateEmailBody(data),
-        submittedAt: new Date().toISOString()
-      };
+      const reportData = buildTemplatePayload(
+        data, 'hso_checklist',
+        generateEmailSubject(),
+        generateEmailBody(data)
+      );
 
       const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:3001';
       const response = await fetch(`${apiUrl}/api/reports/hso-checklist`, {

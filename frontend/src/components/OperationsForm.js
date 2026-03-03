@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import SharedHeader from './SharedHeader';
 import RoverBlock from './RoverBlock';
+import { buildTemplatePayload } from '../utils/templatePayload';
 import './OperationsForm.css';
 
 const OperationsForm = () => {
@@ -23,10 +24,10 @@ const OperationsForm = () => {
       nonNominalSystems: '',
       notesOnNonNominal: '',
       rovers: [
-        { roverName: 'Spirit', used: '', hours: '', beginningCharge: '', endingCharge: '', currentlyCharging: '' },
-        { roverName: 'Opportunity', used: '', hours: '', beginningCharge: '', endingCharge: '', currentlyCharging: '' },
-        { roverName: 'Curiosity', used: '', hours: '', beginningCharge: '', endingCharge: '', currentlyCharging: '' },
-        { roverName: 'Perseverance', used: '', hours: '', beginningCharge: '', endingCharge: '', currentlyCharging: '' },
+        { roverName: 'Spirit', roverUsed: '', hours: '', beginningCharge: '', endingCharge: '', currentlyCharging: '' },
+        { roverName: 'Opportunity', roverUsed: '', hours: '', beginningCharge: '', endingCharge: '', currentlyCharging: '' },
+        { roverName: 'Curiosity', roverUsed: '', hours: '', beginningCharge: '', endingCharge: '', currentlyCharging: '' },
+        { roverName: 'Perseverance', roverUsed: '', hours: '', beginningCharge: '', endingCharge: '', currentlyCharging: '' },
       ],
       generalNotesOnRovers: '',
       summaryOfHabOperations: '',
@@ -68,7 +69,7 @@ const OperationsForm = () => {
 
     const roverLines = (data.rovers || []).map((rover) => {
       return `  ${rover.roverName}:
-    Used: ${rover.used}
+    Used: ${rover.roverUsed}
     Hours: ${rover.hours}
     Beginning Charge: ${rover.beginningCharge}
     Ending Charge: ${rover.endingCharge}
@@ -122,14 +123,11 @@ Questions to Mission Support: ${data.questionsToMissionSupport}`;
     setSubmitStatus(null);
 
     try {
-      const reportData = {
-        ...data,
-        reportDate: data.date,
-        reportType: 'operations',
-        emailSubject: generateEmailSubject(),
-        emailBody: generateEmailBody(data),
-        submittedAt: new Date().toISOString()
-      };
+      const reportData = buildTemplatePayload(
+        data, 'operations_report',
+        generateEmailSubject(),
+        generateEmailBody(data)
+      );
 
       const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:3001';
       const response = await fetch(`${apiUrl}/api/reports/operations`, {

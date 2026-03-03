@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
+import { buildTemplatePayload } from '../utils/templatePayload';
 import './GreenHabReport.css';
 
 const GreenHabReportForm = () => {
@@ -81,7 +82,7 @@ Minimum temperature (last 24h): ${data.minTemperature}
 Hours of supplemental light: ${data.supplementalLightHours}
 Daily water usage for crops: ${data.dailyWaterUsageCrops}
 Daily water usage for research and/or other purposes: ${data.dailyWaterUsageOther}
-Water in Blue Tank (200 gallon capacity): ${data.blueTankRemaining} gallons remaining
+Water in Blue Tank (160 gallon capacity): ${data.blueTankRemaining} gallons remaining
 Time(s) of watering for crops: ${wateringTimes}
 Changes to crops: ${data.cropsChanges}
 Narrative: ${data.narrative}
@@ -96,14 +97,11 @@ ${data.attachedPictures ? 'Attached pictures included.' : ''}`;
     setSubmitStatus(null);
 
     try {
-      const reportData = {
-        ...data,
-        reportDate: data.date, // Map 'date' to 'reportDate' for backend compatibility
-        reportType: 'greenhab',
-        emailSubject: generateEmailSubject(),
-        emailBody: generateEmailBody(data),
-        submittedAt: new Date().toISOString()
-      };
+      const reportData = buildTemplatePayload(
+        data, 'greenhab_report',
+        generateEmailSubject(),
+        generateEmailBody(data)
+      );
 
       const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:3001';
       const response = await fetch(`${apiUrl}/api/reports/greenhab`, {
@@ -265,11 +263,10 @@ ${data.attachedPictures ? 'Attached pictures included.' : ''}`;
           <div className="form-group">
             <label htmlFor="supplementalLightHours">Hours of Supplemental Light *</label>
             <input
-              type="number"
-              step="0.1"
+              type="text"
               id="supplementalLightHours"
-              {...register('supplementalLightHours', { required: 'Supplemental light hours is required', min: 0 })}
-              placeholder="Hours of artificial lighting"
+              {...register('supplementalLightHours', { required: 'Supplemental light hours is required' })}
+              placeholder="Hours or 'Disabled'"
             />
             {errors.supplementalLightHours && <span className="error">{errors.supplementalLightHours.message}</span>}
           </div>
@@ -303,12 +300,12 @@ ${data.attachedPictures ? 'Attached pictures included.' : ''}`;
           </div>
 
           <div className="form-group">
-            <label htmlFor="blueTankRemaining">Water in Blue Tank (200 gallon capacity) *</label>
+            <label htmlFor="blueTankRemaining">Water in Blue Tank (160 gallon capacity) *</label>
             <input
               type="number"
               step="0.1"
               id="blueTankRemaining"
-              {...register('blueTankRemaining', { required: 'Blue tank water level is required', min: 0, max: 200 })}
+              {...register('blueTankRemaining', { required: 'Blue tank water level is required', min: 0, max: 160, valueAsNumber: true })}
               placeholder="Gallons remaining"
             />
             {errors.blueTankRemaining && <span className="error">{errors.blueTankRemaining.message}</span>}

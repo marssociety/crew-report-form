@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import SharedHeader from './SharedHeader';
+import { buildTemplatePayload } from '../utils/templatePayload';
 import './SolSummaryForm.css';
 
 const SolSummaryForm = () => {
@@ -71,14 +72,11 @@ Support Requested: ${data.supportRequested}`;
     setSubmitStatus(null);
 
     try {
-      const reportData = {
-        ...data,
-        reportDate: data.date,
-        reportType: 'sol-summary',
-        emailSubject: generateEmailSubject(),
-        emailBody: generateEmailBody(data),
-        submittedAt: new Date().toISOString()
-      };
+      const reportData = buildTemplatePayload(
+        data, 'sol_summary',
+        generateEmailSubject(),
+        generateEmailBody(data)
+      );
 
       const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:3001';
       const response = await fetch(`${apiUrl}/api/reports/sol-summary`, {

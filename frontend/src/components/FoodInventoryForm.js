@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import SharedHeader from './SharedHeader';
+import { buildTemplatePayload } from '../utils/templatePayload';
 import './FoodInventoryForm.css';
 
 const FOOD_INVENTORY_TEMPLATE = [
@@ -143,14 +144,32 @@ Sol: ${data.sol}
     setSubmitStatus(null);
 
     try {
-      const reportData = {
-        ...data,
-        reportDate: data.date,
-        reportType: 'food-inventory',
-        emailSubject: generateEmailSubject(),
-        emailBody: generateEmailBody(data),
-        submittedAt: new Date().toISOString()
-      };
+      // Transform nested food object into flat items array for schema compliance
+      const items = [];
+      FOOD_INVENTORY_TEMPLATE.forEach((category, catIdx) => {
+        category.items.forEach((item, itemIdx) => {
+          const remaining = data.food && data.food[catIdx] && data.food[catIdx][itemIdx]
+            ? data.food[catIdx][itemIdx].remaining
+            : '';
+          items.push({
+            foodType: category.category,
+            itemName: item.name,
+            startingAmount: String(item.amount),
+            unit: item.unit,
+            weightLbs: item.weight,
+            remainingFraction: remaining || '',
+          });
+        });
+      });
+
+      // Replace nested food object with flat items array
+      const { food, ...rest } = data;
+      const transformedData = { ...rest, items };
+      const reportData = buildTemplatePayload(
+        transformedData, 'food_inventory',
+        generateEmailSubject(),
+        generateEmailBody(data)
+      );
 
       const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:3001';
       const response = await fetch(`${apiUrl}/api/reports/food-inventory`, {

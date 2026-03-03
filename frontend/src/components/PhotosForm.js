@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import SharedHeader from './SharedHeader';
+import { buildTemplatePayload } from '../utils/templatePayload';
 import './PhotosForm.css';
 
 const PhotosForm = () => {
@@ -111,15 +112,11 @@ ${photoList}`;
           setSubmitStatus({ type: 'error', message: errorData.message || 'Failed to submit photos' });
         }
       } else {
-        const reportData = {
-          ...data,
-          reportDate: data.date,
-          reportType: 'photos',
-          emailSubject: generateEmailSubject(),
-          emailBody: generateEmailBody(data),
-          submittedAt: new Date().toISOString(),
-          photos: []
-        };
+        const reportData = buildTemplatePayload(
+          data, 'photos_of_the_day',
+          generateEmailSubject(),
+          generateEmailBody(data)
+        );
 
         const response = await fetch(`${apiUrl}/api/reports/photos`, {
           method: 'POST',

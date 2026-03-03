@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import SharedHeader from './SharedHeader';
+import { buildTemplatePayload } from '../utils/templatePayload';
 import './CheckoutForm.css';
 
 const CHECKOUT_SECTIONS = [
@@ -217,14 +218,27 @@ Cleaning fee actual: ${data.cleaningFeeActual || 'N/A'}`;
     setSubmitStatus(null);
 
     try {
-      const reportData = {
-        ...data,
-        reportDate: data.date,
-        reportType: 'checkout',
-        emailSubject: generateEmailSubject(),
-        emailBody: generateEmailBody(data),
-        submittedAt: new Date().toISOString()
-      };
+      // Transform nested checklist object into flat array for schema compliance
+      const checklistArray = [];
+      CHECKOUT_SECTIONS.forEach((section) => {
+        section.items.forEach((item, idx) => {
+          const itemData = data.checklist && data.checklist[section.name] && data.checklist[section.name][idx];
+          checklistArray.push({
+            section: section.name,
+            itemDescription: item,
+            crewConfirmed: !!(itemData && itemData.crewConfirmed),
+            staffConfirmed: !!(itemData && itemData.staffConfirmed),
+            notes: (itemData && itemData.notes) || '',
+          });
+        });
+      });
+
+      const transformedData = { ...data, checklist: checklistArray };
+      const reportData = buildTemplatePayload(
+        transformedData, 'checkout_checklist',
+        generateEmailSubject(),
+        generateEmailBody(data)
+      );
 
       const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:3001';
       const response = await fetch(`${apiUrl}/api/reports/checkout`, {

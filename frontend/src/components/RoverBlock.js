@@ -8,7 +8,7 @@ const RoverBlock = ({ roverName, register, index }) => {
       <div className="form-row">
         <div className="form-group">
           <label>Used</label>
-          <input type="text" {...register(`${prefix}.used`)} placeholder="Yes / No" />
+          <input type="text" {...register(`${prefix}.roverUsed`)} placeholder="Yes / No" />
         </div>
         <div className="form-group">
           <label>Hours</label>

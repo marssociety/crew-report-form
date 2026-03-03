@@ -19,7 +19,7 @@ Deploy the Mars Society Crew Report application to `crew-reports.marssociety.org
                     ┌─────────────────────┐
                     │  Backend (PM2)      │
                     │  - Express API      │
-                    │  - SQLite database  │
+                    │  - PostgreSQL       │
                     └─────────────────────┘
 ```
 
@@ -32,6 +32,7 @@ Single-server setup: Nginx serves the React frontend as static files and reverse
 - SSH access to phobos
 - DNS A record: `crew-reports.marssociety.org` → phobos IP
 - Node.js 24 installed on phobos
+- PostgreSQL 15+ installed and running
 - PM2 process manager (`sudo npm install -g pm2`)
 
 ---
@@ -49,7 +50,22 @@ git clone https://github.com/YOUR-USERNAME/crew-report-form.git .
 
 ---
 
-## Step 2: Build and Start the Backend
+## Step 2: Set Up PostgreSQL
+
+```bash
+# Install PostgreSQL (if not already installed)
+sudo apt install -y postgresql postgresql-contrib
+
+# Create the database and user
+sudo -u postgres psql << EOF
+CREATE DATABASE crew_reports;
+CREATE USER crew_app WITH PASSWORD 'YOUR_SECURE_PASSWORD';
+GRANT ALL PRIVILEGES ON DATABASE crew_reports TO crew_app;
+ALTER DATABASE crew_reports OWNER TO crew_app;
+EOF
+```
+
+## Step 3: Build and Start the Backend
 
 ```bash
 cd /var/www/crew-report/backend
@@ -61,6 +77,7 @@ npm ci
 cat > .env << EOF
 NODE_ENV=production
 PORT=3001
+DATABASE_URL=postgresql://crew_app:YOUR_SECURE_PASSWORD@localhost:5432/crew_reports
 EOF
 
 # Build TypeScript
@@ -85,7 +102,7 @@ pm2 save
 
 ---
 
-## Step 3: Build the Frontend
+## Step 4: Build the Frontend
 
 ```bash
 cd /var/www/crew-report/frontend
@@ -104,7 +121,7 @@ The built files will be in `frontend/build/`.
 
 ---
 
-## Step 4: Configure Nginx
+## Step 5: Configure Nginx
 
 ```bash
 sudo apt install -y nginx
@@ -169,7 +186,7 @@ sudo systemctl enable nginx
 
 ---
 
-## Step 5: Configure Firewall
+## Step 6: Configure Firewall
 
 ```bash
 sudo ufw allow 22/tcp
@@ -180,7 +197,7 @@ sudo ufw --force enable
 
 ---
 
-## Step 6: Install SSL Certificate
+## Step 7: Install SSL Certificate
 
 ```bash
 sudo apt install -y certbot python3-certbot-nginx
@@ -194,7 +211,7 @@ sudo certbot renew --dry-run
 
 ---
 
-## Step 7: Verify Deployment
+## Step 8: Verify Deployment
 
 ```bash
 # Backend health check
@@ -256,7 +273,7 @@ sudo tail -f /var/log/nginx/access.log
 sudo tail -f /var/log/nginx/error.log
 
 # Backup database
-cp /var/www/crew-report/backend/data/crew_reports.db ~/crew_reports_backup_$(date +%Y%m%d).db
+pg_dump -U crew_app crew_reports > ~/crew_reports_backup_$(date +%Y%m%d).sql
 ```
 
 ---
@@ -292,14 +309,17 @@ sudo systemctl status nginx
 ### Database issues
 
 ```bash
-# Check database file
-ls -lh /var/www/crew-report/backend/data/crew_reports.db
+# Check PostgreSQL is running
+sudo systemctl status postgresql
 
-# Fix permissions if needed
-sudo chown $USER:$USER /var/www/crew-report/backend/data/crew_reports.db
+# Connect to database
+psql -U crew_app -d crew_reports
 
-# Backup before making changes
-cp /var/www/crew-report/backend/data/crew_reports.db ~/crew_reports.db.backup
+# Check report count
+psql -U crew_app -d crew_reports -c "SELECT report_type, COUNT(*) FROM reports GROUP BY report_type;"
+
+# Backup database
+pg_dump -U crew_app crew_reports > ~/crew_reports_backup_$(date +%Y%m%d).sql
 ```
 
 ---
