@@ -1,0 +1,122 @@
+.roles-view {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.roles-view h1 {
+  color: #c1440e;
+  margin-bottom: 2rem;
+  font-size: 2rem;
+}
+
+.roles-loading,
+.roles-error {
+  text-align: center;
+  padding: 2rem;
+  font-size: 1.2rem;
+}
+
+.roles-error {
+  color: #d32f2f;
+}
+
+/* Station selector */
+.station-selector {
+  background: #f5f5f5;
+  border-radius: 8px;
+  padding: 1rem 1.5rem;
+  margin-bottom: 2rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.station-selector label {
+  font-weight: 700;
+  color: #333;
+  font-size: 1rem;
+}
+
+.station-selector select {
+  padding: 0.5rem 1rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 1rem;
+  background: white;
+}
+
+.station-selector select:focus {
+  outline: none;
+  border-color: #c1440e;
+}
+
+/* Roles table */
+.roles-list {
+  margin-top: 1rem;
+}
+
+.roles-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.roles-table thead {
+  background: #f5f5f5;
+}
+
+.roles-table th {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-weight: 700;
+  color: #333;
+  border-bottom: 2px solid #c1440e;
+}
+
+.roles-table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #eee;
+}
+
+.roles-table tr:last-child td {
+  border-bottom: none;
+}
+
+.role-name-cell {
+  font-weight: 700;
+  color: #c1440e;
+  width: 30%;
+}
+
+.role-description-cell {
+  color: #555;
+}
+
+.empty-message {
+  text-align: center;
+  padding: 3rem;
+  font-size: 1.2rem;
+  color: #666;
+  background: #f9f9f9;
+  border-radius: 8px;
+}
+
+@media (max-width: 768px) {
+  .roles-view {
+    padding: 1rem;
+  }
+
+  .station-selector {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .role-name-cell {
+    width: 40%;
+  }
+}

@@ -8,6 +8,7 @@ export interface ReportInput {
   station?: string;
   mission_name?: string;
   crew_number: string;
+  crew_id?: number;
   mission_type?: string;
   mission_start_date?: string;
   mission_duration_day?: number;
@@ -28,6 +29,7 @@ export interface ReportRow {
   station: string | null;
   mission_name: string | null;
   crew_number: string;
+  crew_id: number | null;
   mission_type: string | null;
   mission_start_date: string | null;
   mission_duration_day: number | null;
@@ -37,6 +39,7 @@ export interface ReportRow {
   report_data: Record<string, unknown>;
   email_subject: string | null;
   email_body: string | null;
+  search_vector: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -52,12 +55,12 @@ export class ReportRepository {
     const sql = `
       INSERT INTO reports (
         report_type, title, author, position, station, mission_name,
-        crew_number, mission_type, mission_start_date, mission_duration_day,
+        crew_number, crew_id, mission_type, mission_start_date, mission_duration_day,
         report_date, sol, content, report_data, email_subject, email_body
       ) VALUES (
         $1, $2, $3, $4, $5, $6,
-        $7, $8, $9, $10,
-        $11, $12, $13, $14, $15, $16
+        $7, $8, $9, $10, $11,
+        $12, $13, $14, $15, $16, $17
       ) RETURNING id
     `;
 
@@ -69,6 +72,7 @@ export class ReportRepository {
       input.station || 'MDRS',
       input.mission_name || null,
       input.crew_number,
+      input.crew_id ?? null,
       input.mission_type || null,
       input.mission_start_date || null,
       input.mission_duration_day ?? null,
@@ -111,6 +115,26 @@ export class ReportRepository {
   async findAll(): Promise<ReportRow[]> {
     const result = await this.db.query(
       'SELECT * FROM reports ORDER BY created_at DESC'
+    );
+    return result.rows;
+  }
+
+  async findByCrewId(crewId: number): Promise<ReportRow[]> {
+    const result = await this.db.query(
+      'SELECT * FROM reports WHERE crew_id = $1 ORDER BY report_date DESC, sol DESC',
+      [crewId]
+    );
+    return result.rows;
+  }
+
+  async search(query: string): Promise<ReportRow[]> {
+    const result = await this.db.query(
+      `SELECT *, ts_rank(search_vector, plainto_tsquery('english', $1)) AS rank
+       FROM reports
+       WHERE search_vector @@ plainto_tsquery('english', $1)
+       ORDER BY rank DESC
+       LIMIT 50`,
+      [query]
     );
     return result.rows;
   }

@@ -120,6 +120,45 @@ const ReportSelector = () => {
         </section>
 
         <section className="report-section">
+          <h2>Reference Data</h2>
+          <div className="report-cards-grid">
+            <div
+              className="report-card"
+              onClick={() => navigate('/crews')}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate('/crews'); } }}
+            >
+              <h3 className="report-card-name">Crews</h3>
+              <p className="report-card-filed-by">Crew Rosters</p>
+              <p className="report-card-frequency">View crews and members</p>
+            </div>
+            <div
+              className="report-card"
+              onClick={() => navigate('/roles')}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate('/roles'); } }}
+            >
+              <h3 className="report-card-name">Roles</h3>
+              <p className="report-card-filed-by">Station Roles</p>
+              <p className="report-card-frequency">View roles by station</p>
+            </div>
+            <div
+              className="report-card"
+              onClick={() => navigate('/equipment')}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate('/equipment'); } }}
+            >
+              <h3 className="report-card-name">Equipment</h3>
+              <p className="report-card-filed-by">Equipment Registry</p>
+              <p className="report-card-frequency">View station equipment</p>
+            </div>
+          </div>
+        </section>
+
+        <section className="report-section">
           <h2>Other</h2>
           <div className="report-cards-grid">
             <div

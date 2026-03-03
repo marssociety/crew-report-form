@@ -1,0 +1,141 @@
+.equipment-view {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.equipment-view h1 {
+  color: #c1440e;
+  margin-bottom: 2rem;
+  font-size: 2rem;
+}
+
+.equipment-loading,
+.equipment-error {
+  text-align: center;
+  padding: 2rem;
+  font-size: 1.2rem;
+}
+
+.equipment-error {
+  color: #d32f2f;
+}
+
+/* Filters */
+.equipment-filters {
+  background: #f5f5f5;
+  border-radius: 8px;
+  padding: 1rem 1.5rem;
+  margin-bottom: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.equipment-filters .filter-group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.equipment-filters label {
+  font-weight: 700;
+  color: #333;
+  font-size: 1rem;
+}
+
+.equipment-filters select {
+  padding: 0.5rem 1rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 1rem;
+  background: white;
+}
+
+.equipment-filters select:focus {
+  outline: none;
+  border-color: #c1440e;
+}
+
+.results-count {
+  color: #666;
+  font-weight: 600;
+}
+
+/* Equipment table */
+.equipment-table-wrapper {
+  overflow-x: auto;
+}
+
+.equipment-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.equipment-table thead {
+  background: #f5f5f5;
+}
+
+.equipment-table th {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-weight: 700;
+  color: #333;
+  border-bottom: 2px solid #c1440e;
+  white-space: nowrap;
+}
+
+.equipment-table th.sortable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.equipment-table th.sortable:hover {
+  background-color: #eee;
+}
+
+.equipment-table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #eee;
+  color: #555;
+}
+
+.equipment-table tr:last-child td {
+  border-bottom: none;
+}
+
+.equipment-name-cell {
+  font-weight: 700;
+  color: #c1440e;
+}
+
+.usage-count-cell {
+  text-align: center;
+  font-weight: 600;
+}
+
+.empty-message {
+  text-align: center;
+  padding: 3rem;
+  font-size: 1.2rem;
+  color: #666;
+  background: #f9f9f9;
+  border-radius: 8px;
+}
+
+@media (max-width: 768px) {
+  .equipment-view {
+    padding: 1rem;
+  }
+
+  .equipment-filters {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

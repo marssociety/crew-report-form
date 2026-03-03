@@ -14,6 +14,9 @@ import CheckoutForm from './components/CheckoutForm';
 import FoodInventoryForm from './components/FoodInventoryForm';
 import ViewCrewReports from './components/ViewCrewReports';
 import CrewReportView from './components/CrewReportView';
+import { CrewsList, CrewRoster } from './components/CrewsView';
+import RolesView from './components/RolesView';
+import EquipmentView from './components/EquipmentView';
 import MarsFlag from './Flag-Mars.svg';
 import './App.css';
 
@@ -107,6 +110,10 @@ function App() {
           <Route path="/food-inventory" element={<FoodInventoryForm />} />
           <Route path="/view-reports" element={<ViewCrewReports />} />
           <Route path="/view-reports/:id" element={<CrewReportView />} />
+          <Route path="/crews" element={<CrewsList />} />
+          <Route path="/crews/:id" element={<CrewRoster />} />
+          <Route path="/roles" element={<RolesView />} />
+          <Route path="/equipment" element={<EquipmentView />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
         {isFormView && (

@@ -17,6 +17,11 @@ import astronomyRouter from './routes/astronomy';
 import hsoChecklistRouter from './routes/hsoChecklist';
 import checkoutRouter from './routes/checkout';
 import foodInventoryRouter from './routes/foodInventory';
+import crewsRouter from './routes/crews';
+import crewMembersRouter from './routes/crewMembers';
+import rolesRouter from './routes/roles';
+import crewAssignmentsRouter from './routes/crewAssignments';
+import equipmentRouter from './routes/equipment';
 
 const app = express();
 const port = process.env.PORT || 3001;
@@ -43,6 +48,13 @@ app.use('/api/reports/hso-checklist', hsoChecklistRouter);
 app.use('/api/reports/checkout', checkoutRouter);
 app.use('/api/reports/food-inventory', foodInventoryRouter);
 
+// Reference data routes
+app.use('/api/crews', crewsRouter);
+app.use('/api/crew-members', crewMembersRouter);
+app.use('/api/roles', rolesRouter);
+app.use('/api/crew-assignments', crewAssignmentsRouter);
+app.use('/api/equipment', equipmentRouter);
+
 app.get('/api/schema', (_req, res) => {
   res.json(reportSchema);
 });
@@ -57,6 +69,31 @@ app.post('/api/validate', (req, res) => {
     res.json({ valid: true, data: req.body });
   } else {
     res.status(400).json({ valid: false, errors: result.errors });
+  }
+});
+
+// Full-text search across reports (must be before /api/reports/:id)
+app.get('/api/reports/search', async (req, res) => {
+  try {
+    const q = req.query.q as string;
+    if (!q || q.trim().length === 0) {
+      return res.status(400).json({ error: 'Query parameter "q" is required' });
+    }
+    const reports = await reportRepo.search(q);
+    const mapped = reports.map(r => ({
+      report_id: r.id,
+      title: r.title || `${r.report_type} report`,
+      author: r.author || '',
+      station: r.station || 'MDRS',
+      crew_number: r.crew_number,
+      report_date: r.report_date,
+      report_type: r.report_type,
+      sol: r.sol,
+    }));
+    res.json({ success: true, data: mapped, count: mapped.length });
+  } catch (error) {
+    console.error('Error searching reports:', error);
+    res.status(500).json({ error: 'Search failed' });
   }
 });
 
@@ -121,6 +158,17 @@ app.get('/api/reports/:id', async (req, res) => {
       error: 'Failed to retrieve report',
       message: error instanceof Error ? error.message : 'Unknown error',
     });
+  }
+});
+
+// Archive statistics
+app.get('/api/stats', async (_req, res) => {
+  try {
+    const result = await db.query('SELECT * FROM archive_stats');
+    res.json({ success: true, data: result.rows[0] || {} });
+  } catch (error) {
+    console.error('Error fetching stats:', error);
+    res.status(500).json({ error: 'Failed to fetch stats' });
   }
 });
 
