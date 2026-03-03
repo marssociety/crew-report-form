@@ -1,7 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import './CrewReportView.css';
 
-const CrewReportView = ({ reportId, onBack }) => {
+const CrewReportView = () => {
+  const { id: reportId } = useParams();
+  const navigate = useNavigate();
   const [report, setReport] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -87,7 +90,7 @@ const CrewReportView = ({ reportId, onBack }) => {
     return (
       <div className="crew-report-view">
         <div className="error-message">Error: {error}</div>
-        <button onClick={onBack} className="back-button">
+        <button onClick={() => navigate('/view-reports')} className="back-button">
           Back to Reports List
         </button>
       </div>
@@ -98,7 +101,7 @@ const CrewReportView = ({ reportId, onBack }) => {
     return (
       <div className="crew-report-view">
         <div className="error-message">Report not found</div>
-        <button onClick={onBack} className="back-button">
+        <button onClick={() => navigate('/view-reports')} className="back-button">
           Back to Reports List
         </button>
       </div>
@@ -109,7 +112,7 @@ const CrewReportView = ({ reportId, onBack }) => {
     <div className="crew-report-view">
       <div className="report-header">
         <h1>{report.title}</h1>
-        <button onClick={onBack} className="back-button">
+        <button onClick={() => navigate('/view-reports')} className="back-button">
           Back to Reports List
         </button>
       </div>

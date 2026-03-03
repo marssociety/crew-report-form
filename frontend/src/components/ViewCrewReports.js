@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './ViewCrewReports.css';
 
-const ViewCrewReports = ({ onViewReport }) => {
+const ViewCrewReports = () => {
+  const navigate = useNavigate();
   const [reports, setReports] = useState([]);
   const [filteredReports, setFilteredReports] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -178,11 +180,17 @@ const ViewCrewReports = ({ onViewReport }) => {
               onChange={(e) => handleFilterChange('reportType', e.target.value)}
             >
               <option value="ALL">All Types</option>
-              <option value="Daily">Daily</option>
-              <option value="Weekly">Weekly</option>
-              <option value="EVA">EVA</option>
-              <option value="Incident">Incident</option>
-              <option value="Final">Final</option>
+              <option value="sol_summary">Sol Summary</option>
+              <option value="operations_report">Operations</option>
+              <option value="greenhab_report">GreenHab</option>
+              <option value="eva_report">EVA Report</option>
+              <option value="eva_request">EVA Request</option>
+              <option value="journalist_report">Journalist</option>
+              <option value="photos_of_the_day">Photos of the Day</option>
+              <option value="astronomy_report">Astronomy</option>
+              <option value="hso_checklist">HSO Checklist</option>
+              <option value="checkout_checklist">Checkout</option>
+              <option value="food_inventory">Food Inventory</option>
             </select>
           </div>
 
@@ -238,7 +246,7 @@ const ViewCrewReports = ({ onViewReport }) => {
                 <h3>{report.title}</h3>
                 <button
                   className="view-button"
-                  onClick={() => onViewReport(report.report_id)}
+                  onClick={() => navigate(`/view-reports/${report.report_id}`)}
                 >
                   View Details
                 </button>

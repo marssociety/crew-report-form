@@ -1,7 +1,10 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import './ReportSelector.css';
 
-const ReportSelector = ({ onNavigate }) => {
+const ReportSelector = () => {
+  const navigate = useNavigate();
+
   const dailyReports = [
     {
       id: 'sol-summary',
@@ -61,7 +64,7 @@ const ReportSelector = ({ onNavigate }) => {
       frequency: 'Once per mission',
     },
     {
-      id: 'checkout-checklist',
+      id: 'checkout',
       name: 'Checkout Checklist',
       filedBy: 'Crew',
       frequency: 'End of mission',
@@ -78,13 +81,13 @@ const ReportSelector = ({ onNavigate }) => {
     <div
       key={report.id}
       className="report-card"
-      onClick={() => onNavigate(report.id)}
+      onClick={() => navigate(`/${report.id}`)}
       role="button"
       tabIndex={0}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
-          onNavigate(report.id);
+          navigate(`/${report.id}`);
         }
       }}
     >
@@ -121,35 +124,19 @@ const ReportSelector = ({ onNavigate }) => {
           <div className="report-cards-grid">
             <div
               className="report-card"
-              onClick={() => onNavigate('view-reports')}
+              onClick={() => navigate('/view-reports')}
               role="button"
               tabIndex={0}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' || e.key === ' ') {
                   e.preventDefault();
-                  onNavigate('view-reports');
+                  navigate('/view-reports');
                 }
               }}
             >
               <h3 className="report-card-name">View Reports</h3>
               <p className="report-card-filed-by">All Crew</p>
               <p className="report-card-frequency">Browse submitted reports</p>
-            </div>
-            <div
-              className="report-card"
-              onClick={() => onNavigate('crew-report')}
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  onNavigate('crew-report');
-                }
-              }}
-            >
-              <h3 className="report-card-name">Generic Crew Report</h3>
-              <p className="report-card-filed-by">Any Position</p>
-              <p className="report-card-frequency">Legacy freeform report</p>
             </div>
           </div>
         </section>

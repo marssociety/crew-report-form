@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Routes, Route, Link, Navigate, useLocation } from 'react-router-dom';
 import ReportSelector from './components/ReportSelector';
 import SolSummaryForm from './components/SolSummaryForm';
 import OperationsForm from './components/OperationsForm';
@@ -16,36 +17,28 @@ import CrewReportView from './components/CrewReportView';
 import MarsFlag from './Flag-Mars.svg';
 import './App.css';
 
+const FORM_ROUTES = [
+  '/sol-summary', '/operations', '/greenhab', '/eva-report', '/eva-request',
+  '/journalist', '/photos', '/astronomy', '/hso-checklist', '/checkout', '/food-inventory'
+];
+
 function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(
+    () => sessionStorage.getItem('crew-reports-auth') === 'true'
+  );
   const [passwordInput, setPasswordInput] = useState('');
   const [passwordError, setPasswordError] = useState('');
-  const [currentView, setCurrentView] = useState('menu');
-  const [selectedReportId, setSelectedReportId] = useState(null);
+  const location = useLocation();
 
   const handleLogin = (e) => {
     e.preventDefault();
     if (passwordInput === 'hanksville') {
       setIsAuthenticated(true);
+      sessionStorage.setItem('crew-reports-auth', 'true');
       setPasswordError('');
     } else {
       setPasswordError('Incorrect password');
     }
-  };
-
-  const handleNavigation = (view) => {
-    setCurrentView(view);
-    setSelectedReportId(null);
-  };
-
-  const handleViewReport = (reportId) => {
-    setSelectedReportId(reportId);
-    setCurrentView('report-detail');
-  };
-
-  const handleBackToReportsList = () => {
-    setCurrentView('view-reports');
-    setSelectedReportId(null);
   };
 
   if (!isAuthenticated) {
@@ -72,7 +65,7 @@ function App() {
     );
   }
 
-  const isFormView = !['menu', 'view-reports', 'report-detail'].includes(currentView);
+  const isFormView = FORM_ROUTES.includes(location.pathname);
 
   return (
     <div className="App">
@@ -81,47 +74,46 @@ function App() {
           <img src={MarsFlag} alt="Mars Flag" className="mars-flag-logo" />
           <h1>Mars Society Crew Report System</h1>
           <nav className="form-navigation">
-            <a
-              href="#home"
-              onClick={() => handleNavigation('menu')}
-              className={currentView === 'menu' ? 'nav-link active' : 'nav-link'}
+            <Link
+              to="/"
+              className={location.pathname === '/' ? 'nav-link active' : 'nav-link'}
             >
               New Report
-            </a>
+            </Link>
             <span className="nav-separator">|</span>
-            <a
-              href="#view-reports"
-              onClick={() => handleNavigation('view-reports')}
-              className={currentView === 'view-reports' || currentView === 'report-detail' ? 'nav-link active' : 'nav-link'}
+            <Link
+              to="/view-reports"
+              className={location.pathname.startsWith('/view-reports') ? 'nav-link active' : 'nav-link'}
             >
               View Reports
-            </a>
+            </Link>
           </nav>
         </div>
       </header>
 
       <main className="app-main">
-        {currentView === 'menu' && <ReportSelector onNavigate={handleNavigation} />}
-        {currentView === 'sol-summary' && <SolSummaryForm />}
-        {currentView === 'operations' && <OperationsForm />}
-        {currentView === 'greenhab' && <GreenHabReportForm />}
-        {currentView === 'eva-report' && <EvaReportForm />}
-        {currentView === 'eva-request' && <EvaRequestForm />}
-        {currentView === 'journalist' && <JournalistForm />}
-        {currentView === 'photos' && <PhotosForm />}
-        {currentView === 'astronomy' && <AstronomyForm />}
-        {currentView === 'hso-checklist' && <HsoChecklistForm />}
-        {currentView === 'checkout' && <CheckoutForm />}
-        {currentView === 'food-inventory' && <FoodInventoryForm />}
-        {currentView === 'view-reports' && <ViewCrewReports onViewReport={handleViewReport} />}
-        {currentView === 'report-detail' && selectedReportId && (
-          <CrewReportView reportId={selectedReportId} onBack={handleBackToReportsList} />
-        )}
+        <Routes>
+          <Route path="/" element={<ReportSelector />} />
+          <Route path="/sol-summary" element={<SolSummaryForm />} />
+          <Route path="/operations" element={<OperationsForm />} />
+          <Route path="/greenhab" element={<GreenHabReportForm />} />
+          <Route path="/eva-report" element={<EvaReportForm />} />
+          <Route path="/eva-request" element={<EvaRequestForm />} />
+          <Route path="/journalist" element={<JournalistForm />} />
+          <Route path="/photos" element={<PhotosForm />} />
+          <Route path="/astronomy" element={<AstronomyForm />} />
+          <Route path="/hso-checklist" element={<HsoChecklistForm />} />
+          <Route path="/checkout" element={<CheckoutForm />} />
+          <Route path="/food-inventory" element={<FoodInventoryForm />} />
+          <Route path="/view-reports" element={<ViewCrewReports />} />
+          <Route path="/view-reports/:id" element={<CrewReportView />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
         {isFormView && (
           <div className="back-to-menu">
-            <button onClick={() => handleNavigation('menu')} className="back-button">
+            <Link to="/" className="back-button">
               &larr; Back to Report Selector
-            </button>
+            </Link>
           </div>
         )}
       </main>
