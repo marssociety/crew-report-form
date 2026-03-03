@@ -136,14 +136,44 @@ CREATE TABLE IF NOT EXISTS report_equipment (
 );
 
 -- =============================================================================
--- 8. ALTER reports — add new columns (safe for existing data)
+-- 8. Report Assets
+-- =============================================================================
+
+CREATE TABLE IF NOT EXISTS report_assets (
+    id              SERIAL PRIMARY KEY,
+    report_id       UUID NOT NULL REFERENCES reports(id) ON DELETE CASCADE,
+    asset_type      TEXT NOT NULL,          -- 'image', 'document', 'spreadsheet'
+    original_filename TEXT,
+    caption         TEXT,
+    source_url      TEXT,                   -- original URL or archive file path
+    storage_url     TEXT,                   -- permanent cloud storage URL (NULL until uploaded)
+    storage_bucket  TEXT,
+    mime_type       TEXT,
+    file_size_bytes BIGINT,
+    sort_order      INTEGER DEFAULT 0,
+    created_at      TIMESTAMPTZ DEFAULT NOW(),
+    updated_at      TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- =============================================================================
+-- 9. ALTER reports — add new columns (safe for existing data)
 -- =============================================================================
 
 ALTER TABLE reports ADD COLUMN IF NOT EXISTS crew_id INTEGER;
 ALTER TABLE reports ADD COLUMN IF NOT EXISTS search_vector TSVECTOR;
 
+-- Ingestion pipeline columns
+ALTER TABLE reports ADD COLUMN IF NOT EXISTS content_hash TEXT;
+ALTER TABLE reports ADD COLUMN IF NOT EXISTS source TEXT;
+ALTER TABLE reports ADD COLUMN IF NOT EXISTS import_batch TEXT;
+ALTER TABLE reports ADD COLUMN IF NOT EXISTS source_id TEXT;
+ALTER TABLE reports ADD COLUMN IF NOT EXISTS needs_review BOOLEAN DEFAULT FALSE;
+ALTER TABLE reports ADD COLUMN IF NOT EXISTS review_notes TEXT;
+ALTER TABLE reports ADD COLUMN IF NOT EXISTS field_season TEXT;
+ALTER TABLE reports ADD COLUMN IF NOT EXISTS source_metadata JSONB DEFAULT '{}';
+
 -- =============================================================================
--- 9. Foreign Keys (deferred to avoid circular dependencies)
+-- 10. Foreign Keys (deferred to avoid circular dependencies)
 -- =============================================================================
 
 DO $$
@@ -183,7 +213,7 @@ END;
 $$;
 
 -- =============================================================================
--- 10. Indexes
+-- 11. Indexes
 -- =============================================================================
 
 -- Reports indexes
@@ -197,6 +227,14 @@ CREATE INDEX IF NOT EXISTS idx_reports_author      ON reports(author);
 CREATE INDEX IF NOT EXISTS idx_reports_search      ON reports USING GIN (search_vector);
 CREATE INDEX IF NOT EXISTS idx_reports_crew_id     ON reports(crew_id);
 
+-- Ingestion pipeline indexes
+CREATE UNIQUE INDEX IF NOT EXISTS idx_reports_content_hash ON reports(content_hash) WHERE content_hash IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_reports_source        ON reports(source);
+CREATE INDEX IF NOT EXISTS idx_reports_import_batch  ON reports(import_batch);
+CREATE INDEX IF NOT EXISTS idx_reports_source_id     ON reports(source_id);
+CREATE INDEX IF NOT EXISTS idx_reports_needs_review  ON reports(needs_review) WHERE needs_review = TRUE;
+CREATE INDEX IF NOT EXISTS idx_reports_field_season   ON reports(field_season);
+
 -- Dedup index — prevent exact duplicate imports (wrapped in exception handler)
 DO $$
 BEGIN
@@ -209,6 +247,24 @@ EXCEPTION
         RAISE NOTICE 'Could not create dedup index (possible duplicate data): %', SQLERRM;
 END;
 $$;
+
+-- Dedup index for NULL sol
+DO $$
+BEGIN
+    CREATE UNIQUE INDEX idx_reports_dedup_no_sol
+        ON reports(report_type, crew_number, report_date)
+        WHERE sol IS NULL AND crew_number IS NOT NULL;
+EXCEPTION
+    WHEN duplicate_table THEN NULL;
+    WHEN others THEN
+        RAISE NOTICE 'Could not create dedup_no_sol index (possible duplicate data): %', SQLERRM;
+END;
+$$;
+
+-- Report assets indexes
+CREATE INDEX IF NOT EXISTS idx_report_assets_report  ON report_assets(report_id);
+CREATE INDEX IF NOT EXISTS idx_report_assets_type    ON report_assets(asset_type);
+CREATE INDEX IF NOT EXISTS idx_report_assets_storage ON report_assets(storage_url) WHERE storage_url IS NULL;
 
 -- Crews indexes
 CREATE INDEX IF NOT EXISTS idx_crews_number   ON crews(crew_number);
@@ -229,7 +285,7 @@ CREATE INDEX IF NOT EXISTS idx_crew_assignments_role   ON crew_assignments(role_
 CREATE INDEX IF NOT EXISTS idx_equipment_type ON equipment(equipment_type);
 
 -- =============================================================================
--- 11. Triggers
+-- 12. Triggers
 -- =============================================================================
 
 -- Auto-update updated_at on row modification
@@ -266,6 +322,12 @@ BEGIN
             BEFORE UPDATE ON equipment
             FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
     END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'set_updated_at_report_assets') THEN
+        CREATE TRIGGER set_updated_at_report_assets
+            BEFORE UPDATE ON report_assets
+            FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+    END IF;
 END;
 $$;
 
@@ -293,7 +355,7 @@ END;
 $$;
 
 -- =============================================================================
--- 12. Views
+-- 13. Views
 -- =============================================================================
 
 -- Crew Rosters
