@@ -13,7 +13,7 @@ Deploy the Mars Society Crew Report application to `crew-reports.marssociety.org
                     │                     │
                     │  /api/*  ──► proxy  │──► Node.js :3001
                     │  /health ──► proxy  │──► Node.js :3001
-                    │  /*      ──► static │──► /var/www/crew-report/frontend/build/
+                    │  /*      ──► static │──► /var/www/crew-reports/frontend/build/
                     └─────────────────────┘
                               │
                     ┌─────────────────────┐
@@ -42,9 +42,9 @@ Single-server setup: Nginx serves the React frontend as static files and reverse
 ```bash
 ssh user@phobos
 
-sudo mkdir -p /var/www/crew-report
-sudo chown $USER:$USER /var/www/crew-report
-cd /var/www/crew-report
+sudo mkdir -p /var/www/crew-reports
+sudo chown $USER:$USER /var/www/crew-reports
+cd /var/www/crew-reports
 git clone https://github.com/YOUR-USERNAME/crew-report-form.git .
 ```
 
@@ -68,7 +68,7 @@ EOF
 ## Step 3: Build and Start the Backend
 
 ```bash
-cd /var/www/crew-report/backend
+cd /var/www/crew-reports/backend
 
 # Install dependencies
 npm ci
@@ -105,7 +105,7 @@ pm2 save
 ## Step 4: Build the Frontend
 
 ```bash
-cd /var/www/crew-report/frontend
+cd /var/www/crew-reports/frontend
 
 # Set the production API URL (same domain, Nginx will proxy)
 cat > .env.production << EOF
@@ -160,14 +160,14 @@ server {
 
     # Serve React frontend (static files)
     location / {
-        root /var/www/crew-report/frontend/build;
+        root /var/www/crew-reports/frontend/build;
         index index.html;
         try_files $uri $uri/ /index.html;
     }
 
     # Cache static assets
     location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
-        root /var/www/crew-report/frontend/build;
+        root /var/www/crew-reports/frontend/build;
         expires 7d;
         add_header Cache-Control "public, immutable";
     }
@@ -232,7 +232,7 @@ Open `https://crew-reports.marssociety.org` in a browser — you should see the 
 
 ```bash
 ssh user@phobos
-cd /var/www/crew-report
+cd /var/www/crew-reports
 
 # Pull latest code
 git pull origin master
@@ -292,7 +292,7 @@ pm2 restart crew-report-backend
 
 ```bash
 # Verify the build exists
-ls /var/www/crew-report/frontend/build/index.html
+ls /var/www/crew-reports/frontend/build/index.html
 
 # Check Nginx config
 sudo nginx -t
@@ -347,7 +347,7 @@ jobs:
         username: ${{ secrets.PHOBOS_USERNAME }}
         key: ${{ secrets.PHOBOS_SSH_KEY }}
         script: |
-          cd /var/www/crew-report
+          cd /var/www/crew-reports
           git pull origin master
           cd backend && npm ci && npm run build && pm2 restart crew-report-backend
           cd ../frontend && npm ci && npm run build
@@ -368,7 +368,7 @@ jobs:
 ## Quick Start Checklist
 
 - [ ] DNS A record for `crew-reports.marssociety.org` points to phobos
-- [ ] Clone repo to `/var/www/crew-report`
+- [ ] Clone repo to `/var/www/crew-reports`
 - [ ] Build and start backend with PM2
 - [ ] Build frontend with production API URL
 - [ ] Configure and enable Nginx
