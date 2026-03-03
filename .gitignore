@@ -81,3 +81,7 @@ backups/
 
 # Personal notes
 Notes.md
+
+DEPLOYMENT.md
+nginx.config
+DATABASE_SCHEMA_ORIGINAL_FOR_REFERENCE.md
