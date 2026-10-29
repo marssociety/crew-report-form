@@ -35,6 +35,11 @@ const ENVELOPE_FIELDS = new Set([
   'reportDate', 'reportType', 'emailSubject', 'emailBody', 'submittedAt'
 ]);
 
+const OPTIONAL_OPERATIONS_SELECTS = new Set([
+  'mainWaterTankPipeHeater', 'mainWaterTankHeater',
+  'toiletTankEmptied', 'greenhabHeater'
+]);
+
 // Map form field names (camelCase) to schema field names (snake_case)
 // where the automatic camelToSnake conversion doesn't produce the right name
 const FIELD_ALIASES = {
@@ -56,6 +61,10 @@ export function buildTemplatePayload(formData, reportType, emailSubject, emailBo
   const roleSpecificData = {};
 
   for (const [key, value] of Object.entries(formData)) {
+    // A blank optional selection must be absent, rather than an invalid enum value.
+    if (reportType === 'operations_report' && OPTIONAL_OPERATIONS_SELECTS.has(key) && value === '') {
+      continue;
+    }
     if (!ENVELOPE_FIELDS.has(key)) {
       roleSpecificData[key] = value;
     }
