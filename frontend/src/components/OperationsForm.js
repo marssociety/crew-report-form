@@ -338,7 +338,9 @@ Questions to Mission Support: ${data.questionsToMissionSupport}`;
                 type="number"
                 step="0.1"
                 id="greenhabWaterUseGallons"
-                {...register('greenhabWaterUseGallons')}
+                {...register('greenhabWaterUseGallons', {
+                  setValueAs: value => value === '' ? undefined : Number(value)
+                })}
                 placeholder="Gallons used"
               />
             </div>
